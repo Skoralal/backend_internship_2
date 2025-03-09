@@ -36,7 +36,43 @@ public class AccountProcessor
 		       CalculateOperation3(bankAccount);
 	}
 
-	private decimal CalculateOperation(BankOperation bankOperation)
+
+    public decimal CalculatePerformed(ref BankAccount bankAccount)
+    {
+        ref var lastOp = ref bankAccount._lastOp;
+        ref var prevOp = ref bankAccount._prevOp;
+        return CalculateOperation(lastOp) +
+               CalculateOperation(prevOp) +
+               CalculateOperation1(lastOp) +
+               CalculateOperation1(prevOp) +
+               CalculateOperation2(lastOp) +
+               CalculateOperation2(prevOp) +
+               CalculateOperation3(lastOp) +
+               CalculateOperation3(prevOp) +
+               CalculateOperation3(bankAccount)
+               +
+               CalculateOperation(lastOp) +
+               CalculateOperation(prevOp) +
+               CalculateOperation1(lastOp) +
+               CalculateOperation1(prevOp) +
+               CalculateOperation2(lastOp) +
+               CalculateOperation2(prevOp) +
+               CalculateOperation3(lastOp) +
+               CalculateOperation3(prevOp) +
+               CalculateOperation3(bankAccount)
+               +
+               CalculateOperation(lastOp) +
+               CalculateOperation(prevOp) +
+               CalculateOperation1(lastOp) +
+               CalculateOperation1(prevOp) +
+               CalculateOperation2(lastOp) +
+               CalculateOperation2(prevOp) +
+               CalculateOperation3(lastOp) +
+               CalculateOperation3(prevOp) +
+               CalculateOperation3(bankAccount);
+    }
+
+    private decimal CalculateOperation(BankOperation bankOperation)
 	{
 		// Some calculation code
 		return bankOperation.OperationInfo0;
@@ -65,8 +101,18 @@ public class AccountProcessor
 public struct BankAccount : ITotalAmount
 {
 	public decimal TotalAmount { get; set; }
-	public BankOperation LastOperation { get; set; }
-	public BankOperation PreviousOperation { get; set; }
+	internal BankOperation _lastOp;
+    public BankOperation LastOperation { get
+		{
+			return _lastOp;
+		}
+		set
+		{
+			_lastOp = value;
+		}
+	}
+    internal BankOperation _prevOp;
+    public BankOperation PreviousOperation { get => _prevOp; set => _prevOp = value; }
 }
 
 public interface ITotalAmount
