@@ -134,8 +134,7 @@ public class StudentService
     public static string[] GetAllStudentNames(GroupWithStudents[] groupWithStudents)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-        var aboba = groupWithStudents.SelectMany(x => x.Students).Select(x=>x.FirstName + " " + x.LastName).ToArray();
-        return aboba;
+        return groupWithStudents.SelectMany(x => x.Students).Select(x => x.FirstName + " " + x.LastName).ToArray();
     }
 }
 
