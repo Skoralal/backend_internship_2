@@ -4,6 +4,7 @@ namespace Fuse8.BackendInternship.Domain;
 
 public static class AssemblyHelpers
 {
+	private static readonly string _sysAssName = "System";
 	/// <summary>
 	/// Получает информацию о базовых типах классов из namespace "Fuse8.BackendInternship.Domain", у которых есть наследники.
 	/// </summary>
@@ -14,13 +15,47 @@ public static class AssemblyHelpers
 	/// <returns>Список типов с количеством наследников</returns>
 	public static (string BaseTypeName, int InheritorCount)[] GetTypesWithInheritors()
 	{
+		
 		// Получаем все классы из текущей Assembly
 		var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
 			!.DefinedTypes
 			.Where(p => p.IsClass);
-
+		var dic = new Dictionary<Type, HashSet<Type>>();
+		foreach (var assemblyType in assemblyClassTypes)
+		{
+			var tempType = assemblyType.AsType();
+			var root = GetBaseType(tempType);
+			if(root != null)
+			{
+				if (root.AssemblyQualifiedName!.StartsWith(_sysAssName))
+				{
+					continue;
+				}
+				if (!dic.ContainsKey(root))
+				{
+					dic.Add(root, new());
+				}
+				dic[root].Add(tempType);
+			}
+		}
+		foreach (var (baseClass, childClasses) in dic)
+		{
+			HashSet<Type> toRemove = new HashSet<Type>();
+			foreach (var childClass in childClasses)
+			{
+				if (childClasses.Contains(childClass.BaseType!))
+				{
+					toRemove.Add(childClass.BaseType!);
+				}
+			}
+			foreach (var type in toRemove)
+			{
+				dic[baseClass].Remove(type);
+			}
+		}
+		var aboba = dic.Select(x=>(x.Key.Name, x.Value.Count)).ToArray();
+		return aboba;
 		// ToDo: Добавить реализацию
-		throw new NotImplementedException();
 	}
 
 	/// <summary>

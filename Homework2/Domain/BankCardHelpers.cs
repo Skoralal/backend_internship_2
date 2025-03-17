@@ -11,7 +11,7 @@ public static class BankCardHelpers
 	/// <returns>Номер карты без маски</returns>
 	public static string GetUnmaskedCardNumber(BankCard card)
 	{
-		// ToDo: С помощью рефлексии получить номер карты без маски
-		return card.MaskedCardNumber;
+        // ToDo: С помощью рефлексии получить номер карты без маски
+        return typeof(BankCard).GetField("_number", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(card).ToString();
 	}
 }

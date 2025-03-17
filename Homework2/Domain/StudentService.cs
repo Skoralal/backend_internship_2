@@ -18,8 +18,13 @@ public class StudentService
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
 
+
         const int stateFundedStudentQuantity = 5;
-        return Array.Empty<string>();
+        return students.Where(x => testTaskResults
+        .OrderByDescending(x => x.GradeSum)
+        .Take(stateFundedStudentQuantity)
+        .Select(x => x.StudentId).Contains(x.Id))
+            .Select(x=>x.FirstName+" "+x.LastName).ToArray();
     }
 
     /// <summary>
@@ -38,8 +43,21 @@ public class StudentService
     public static StudentFullInfoModel[] GetStudentsFullInfo(Student[] students, TestTaskResult[] testTaskResults, Group[] groups)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return Array.Empty<StudentFullInfoModel>();
+        return (from student in students
+                join tTask in testTaskResults on student.Id equals tTask.StudentId into studentTasks
+                from studentTask in studentTasks.DefaultIfEmpty()
+                join groupe in groups on student.GroupId equals groupe.Id into studentGroups
+                from studentGroupe in studentGroups.DefaultIfEmpty()
+                select new StudentFullInfoModel
+                {
+                    TestTaskGradeSum = studentTask?.GradeSum ?? null,
+                    TestTaskPassedAt = studentTask?.PassedAt ?? null,
+                    StudentId = student.Id,
+                    LastName = student.LastName,
+                    GroupName = studentGroupe?.GroupName ?? "",
+                    GroupId = studentGroupe?.Id ?? default,
+                    FirstName = student.FirstName,
+                }).ToArray();
     }
 
     /// <summary>
@@ -58,8 +76,13 @@ public class StudentService
     public static Dictionary<string, string> GetBestStudentsByGroup(StudentFullInfoModel[] students)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return new Dictionary<string, string>();
+        return students.Where(x=>x.TestTaskGradeSum != null).GroupBy(x => x.GroupId).Select(x => new
+        {
+            Group = x.Key.ToString(),
+            Student = x.OrderByDescending(x => x.TestTaskGradeSum)
+            .GroupBy(x => x.TestTaskGradeSum).First()
+            .OrderBy(x=>x.TestTaskPassedAt).First(),
+        }).ToDictionary(x => "Group " + x.Group, elementSelector: y=>y.Student.FirstName + " " + y.Student.LastName);
     }
 
     /// <summary>
@@ -76,7 +99,7 @@ public class StudentService
     public static string[] GetStudentsWithSameNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
+        return studentsFromFirstGroup.Select(x=>x.FirstName).Intersect(studentsFromSecondGroup.Select(x=>x.FirstName)).ToArray();
         return Array.Empty<string>();
     }
 
@@ -94,8 +117,10 @@ public class StudentService
     public static string[] GetAllUniqueStudentNames(Student[] studentsFromFirstGroup, Student[] studentsFromSecondGroup)
     {
         // TODO: реализовать логику. Из LINQ операторов можно использовать только "Select". Можно использовать дополнительные коллекции (HashSet и т.д.)
-
-        return Array.Empty<string>();
+        var set = new HashSet<string>();
+        foreach(var student in studentsFromFirstGroup) { set.Add(student.FirstName); }
+        foreach(var student in studentsFromSecondGroup) { set.Add(student.FirstName); }
+        return set.ToArray();
     }
 
     /// <summary>
@@ -109,8 +134,8 @@ public class StudentService
     public static string[] GetAllStudentNames(GroupWithStudents[] groupWithStudents)
     {
         // TODO: реализовать логику с использованием LINQ без создания дополнительных коллекций (HashSet и т.д.)
-
-        return Array.Empty<string>();
+        var aboba = groupWithStudents.SelectMany(x => x.Students).Select(x=>x.FirstName + " " + x.LastName).ToArray();
+        return aboba;
     }
 }
 
