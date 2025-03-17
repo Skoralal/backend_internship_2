@@ -53,8 +53,7 @@ public static class AssemblyHelpers
 				dic[baseClass].Remove(type);
 			}
 		}
-		var aboba = dic.Select(x=>(x.Key.Name, x.Value.Count)).ToArray();
-		return aboba;
+		return dic.Select(x=>(x.Key.Name, x.Value.Count)).ToArray();
 		// ToDo: Добавить реализацию
 	}
 
