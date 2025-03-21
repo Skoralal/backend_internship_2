@@ -20,9 +20,9 @@ public class Lazy<TValue>
 			return _lazyVar;
 		}
 	}
-	public Lazy(Func<TValue> value)
+	public Lazy(Func<TValue>? value)
 	{
-		_initorContainer = value;
+		_initorContainer = value??throw new ArgumentNullException(nameof(Lazy<TValue>), message:$"supplied Func was null");
 	}
 	private void Init()
 	{

@@ -15,19 +15,20 @@ public static class AssemblyHelpers
 	/// <returns>Список типов с количеством наследников</returns>
 	public static (string BaseTypeName, int InheritorCount)[] GetTypesWithInheritors()
 	{
-		
-		// Получаем все классы из текущей Assembly
-		var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
+
+        // Получаем все классы из текущей Assembly
+        var currentAssembly = Assembly.GetAssembly(typeof(AssemblyHelpers));
+
+        var assemblyClassTypes = currentAssembly
 			!.DefinedTypes
 			.Where(p => p.IsClass);
 		var dic = new Dictionary<Type, HashSet<Type>>();
-		foreach (var assemblyType in assemblyClassTypes)
+        foreach (var classType in assemblyClassTypes)
 		{
-			var tempType = assemblyType.AsType();
-			var root = GetBaseType(tempType);
-			if(root != null)
+			var root = GetBaseType(classType);
+			if(root != null && classType.IsAbstract == false)
 			{
-				if (root.AssemblyQualifiedName!.StartsWith(_sysAssName))
+				if (root.Assembly != currentAssembly)
 				{
 					continue;
 				}
@@ -35,22 +36,7 @@ public static class AssemblyHelpers
 				{
 					dic.Add(root, new());
 				}
-				dic[root].Add(tempType);
-			}
-		}
-		foreach (var (baseClass, childClasses) in dic)
-		{
-			HashSet<Type> toRemove = new HashSet<Type>();
-			foreach (var childClass in childClasses)
-			{
-				if (childClasses.Contains(childClass.BaseType!))
-				{
-					toRemove.Add(childClass.BaseType!);
-				}
-			}
-			foreach (var type in toRemove)
-			{
-				dic[baseClass].Remove(type);
+				dic[root].Add(classType);
 			}
 		}
 		return dic.Select(x=>(x.Key.Name, x.Value.Count)).ToArray();
