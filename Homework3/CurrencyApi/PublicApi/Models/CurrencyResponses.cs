@@ -1,7 +1,4 @@
-﻿using static Fuse8.BackendInternship.PublicApi.Models.ApiResponse;
-using System.Text.Json;
-
-namespace Fuse8.BackendInternship.PublicApi.Models
+﻿namespace Fuse8.BackendInternship.PublicApi.Models
 {
     /// <summary>
     /// Model exchange rates between two currencies w/o date

@@ -1,8 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Xml.Linq;
-
-namespace Fuse8.BackendInternship.PublicApi.Models
+﻿namespace Fuse8.BackendInternship.PublicApi.Models
 {
     public class ApiResponse
     {

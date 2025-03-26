@@ -1,5 +1,4 @@
-﻿
-namespace Fuse8.BackendInternship.PublicApi.Middleware
+﻿namespace Fuse8.BackendInternship.PublicApi.Middleware
 {
     public class IncomingRequestsLogger:IMiddleware
     {

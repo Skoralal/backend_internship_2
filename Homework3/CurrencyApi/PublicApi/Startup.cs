@@ -1,14 +1,10 @@
-﻿using System.Net.Http;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Audit.Core;
-using Audit.Core.Providers;
 using Audit.Http;
-using Fuse8.BackendInternship.PublicApi.Controllers;
 using Fuse8.BackendInternship.PublicApi.Middleware;
 using Fuse8.BackendInternship.PublicApi.Models;
 using Fuse8.BackendInternship.PublicApi.Models.Exceptions;
 using Fuse8.BackendInternship.PublicApi.Services;
-using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.PublicApi;
 

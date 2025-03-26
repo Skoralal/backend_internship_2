@@ -1,6 +1,4 @@
 using Fuse8.BackendInternship.PublicApi;
-using Fuse8.BackendInternship.PublicApi.Controllers;
-using Fuse8.BackendInternship.PublicApi.Models;
 using Microsoft.AspNetCore;
 
 var webHost = WebHost
