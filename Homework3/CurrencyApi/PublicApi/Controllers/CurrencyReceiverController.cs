@@ -37,6 +37,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> GetBaseAsync()
         {
             var stringResponce = await _caller.CallAsync($"latest?currencies={_settings.DefaultCurrency}&base_currency={_settings.BaseCurrency}");
@@ -64,6 +67,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("{currencyCode}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> GetBase([FromRoute]string currencyCode)
         {
             var stringResponce = await _caller.CallAsync($"latest?currencies={currencyCode}&base_currency={_settings.BaseCurrency}");
@@ -92,6 +98,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("{currencyCode}/{date}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadWDate))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> GetBase([FromRoute] string currencyCode,[FromRoute] DateOnly date)
         {
             var stringResponce = await _caller.CallAsync($"historical?currencies={currencyCode}&date={date}&base_currency={_settings.BaseCurrency}");

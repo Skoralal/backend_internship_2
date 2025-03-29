@@ -30,6 +30,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("/settings")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MyStatus))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> GetSettings()
         {
             StatusResponse statusModel = JsonSerializer.Deserialize<StatusResponse>(await _caller.CallAsync("status", false));
