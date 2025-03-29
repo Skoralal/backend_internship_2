@@ -1,4 +1,6 @@
-﻿namespace Fuse8.BackendInternship.PublicApi.Models
+﻿using System.Text.Json.Serialization;
+
+namespace Fuse8.BackendInternship.PublicApi.Models
 {
     /// <summary>
     /// Model exchange rates between two currencies w/o date
@@ -8,15 +10,17 @@
         /// <summary>
         /// ISO 4217 currency code
         /// </summary>
-        public string code { get; set; } = "";
+        [JsonPropertyName("code")]
+        public string Code { get; set; }
         /// <summary>
         /// Exchange rate
         /// </summary>
-        public double value { get; set; } = 0;
+        [JsonPropertyName("value")]
+        public double Value { get; set; }
         public CurrencyLoadBase(ApiResponse response, int precision)
         {
-            (this.code, this.value) = response.data.Values.First();
-            value = Math.Round(value, precision);
+            (this.Code, this.Value) = response.Data.Values.First();
+            Value = Math.Round(Value, precision);
         }
     }
     /// <summary>
@@ -27,10 +31,11 @@
         /// <summary>
         /// Date of exchange rate [format(YYYY-MM-DD)]
         /// </summary>
-        public string date { get; set; } = "";
-        public CurrencyLoadWDate(ApiResponse response, int precision) :base(response, precision)
+        [JsonPropertyName("date")]
+        public DateOnly Date { get; set; }
+        public CurrencyLoadWDate(ApiResponse response, int precision, DateOnly date) :base(response, precision)
         {
-            date = response.meta.last_updated_at.ToString("yyyy-MM-dd");
+            Date = date;
         }
     }
 }

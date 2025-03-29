@@ -6,34 +6,35 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
 {
     public class GlobalExceptionFilter: IExceptionFilter
     {
+        private readonly ILogger<GlobalExceptionFilter> _logger;
+        public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
+        {
+            _logger = logger;
+        }
         public void OnException(ExceptionContext context)
         {
-
-            if (context.Exception is ApiRequestLimitException LimitException)
+            switch (context.Exception)
             {
-                Console.WriteLine($"{nameof(ApiRequestLimitException)} was thrown");
-                context.Result = new ObjectResult(new { error = LimitException.Message })
-                {
-                    StatusCode = (int)HttpStatusCode.TooManyRequests
-                };
-            }
-            else if (context.Exception is CurrencyNotFoundException NotFoundException)
-            {
-                context.Result = new ObjectResult(new { error = NotFoundException.Message })
-                {
-                    StatusCode = (int)HttpStatusCode.NotFound
-                };
-            }
-            else
-            {
-                Console.WriteLine("Unknown Exception was thrown");
-                context.Result = new ObjectResult(new { error = "Something went wrong" })
-                {
-                    StatusCode = (int)HttpStatusCode.InternalServerError
-                };
+                case ApiRequestLimitException LimitException:
+                    _logger.LogError(LimitException.Message);
+                    SetResponse(LimitException.Message, StatusCodes.Status429TooManyRequests);
+                    break;
+                case CurrencyNotFoundException NotFoundException:
+                    SetResponse(NotFoundException.Message, StatusCodes.Status404NotFound);
+                    break;
+                default:
+                    _logger.LogWarning(context.Exception, "Unknown Exception was thrown");
+                    SetResponse("Unknown Exception was thrown", StatusCodes.Status500InternalServerError);
+                    break;
             }
 
             context.ExceptionHandled = true;
+            return;
+            void SetResponse(string errorMessage, int statusCode)
+            {
+                context.Result = new JsonResult(new ErrorResponse(errorMessage));
+                context.HttpContext.Response.StatusCode = statusCode;   
+            }
         }
     }
 }

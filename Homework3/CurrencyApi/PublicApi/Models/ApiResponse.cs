@@ -1,25 +1,26 @@
-﻿namespace Fuse8.BackendInternship.PublicApi.Models
+﻿using System.Text.Json.Serialization;
+
+namespace Fuse8.BackendInternship.PublicApi.Models
 {
     public class ApiResponse
     {
-            public Meta meta { get; set; }
-            public Dictionary<string, Currency> data { get; set; }
-    }
-
-    public class Meta
-    {
-        public DateTime last_updated_at { get; set; }
+        [JsonPropertyName("data")]
+            public Dictionary<string, Currency> Data { get; init; }
     }
 
 
     public class Currency
     {
-        public string code { get; set; }
-        public double value { get; set; }
+        [JsonPropertyName("code")]
+
+        public string Code { get; init; }
+        [JsonPropertyName("value")]
+
+        public double Value { get; init; }
         public void Deconstruct(out string code, out double value)
         {
-            code = this.code;
-            value = this.value;
+            code = this.Code;
+            value = this.Value;
         }
     }
 }

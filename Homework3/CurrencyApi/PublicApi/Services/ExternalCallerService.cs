@@ -8,34 +8,38 @@ namespace Fuse8.BackendInternship.PublicApi.Services
     public class ExternalCallerService:IExternalCallerService
     {
         private readonly HttpClient _httpClient;
-        private readonly IOptionsMonitor<SecretSettings> _secretSettings;
-        public ExternalCallerService(HttpClient httpClient, IOptionsMonitor<SecretSettings> secretSettings)
+        public ExternalCallerService(HttpClient httpClient, IOptionsSnapshot<DefaultSettings> settings)
         {
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.Add("apikey", secretSettings.CurrentValue.ApiKey);
+            _httpClient.BaseAddress = new Uri(settings.Value.BaseURL);
+            _httpClient.DefaultRequestHeaders.Add("apikey", settings.Value.ApiKey);
         }
         public async Task<string> CallAsync(string uri, bool usesTokens=true)
         {
             if (usesTokens)
             {
                 var jsonContent = await CallAsync("status", false);
-                StatusResponce statusModel = JsonSerializer.Deserialize<StatusResponce>(jsonContent);
-                if(statusModel.quotas.month.remaining == 0)
+                StatusResponse statusModel = JsonSerializer.Deserialize<StatusResponse>(jsonContent);
+                if(statusModel.Quotas.Month.Remaining <= 0)
                 {
                     throw new ApiRequestLimitException(nameof(CallAsync));
                 }
             }
-            var responce = await _httpClient.GetAsync(uri);
-            if (responce.StatusCode == System.Net.HttpStatusCode.OK)
+            var response = await _httpClient.GetAsync(uri);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                return await responce.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync();
             }
-            if (responce.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
             {
-                throw new CurrencyNotFoundException();
+                var stringResponse = await response.Content.ReadAsStringAsync();
+                if (stringResponse.Contains("The selected currencies is invalid"))
+                {
+                    throw new CurrencyNotFoundException();
+                };
             }
 
-            throw new Exception();
+            throw new UnexpectedAPIResponseException(response.StatusCode);
         }
     }
 }

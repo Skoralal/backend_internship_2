@@ -2,6 +2,6 @@
 {
     public class SecretSettings
     {
-        public string ApiKey { get; set; } = "";
+        public string ApiKey { get; set; }
     }
 }

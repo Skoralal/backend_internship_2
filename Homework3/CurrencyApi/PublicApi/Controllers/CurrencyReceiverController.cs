@@ -37,11 +37,11 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
-        public async Task<IActionResult> GetBase()
+        public async Task<IActionResult> GetBaseAsync()
         {
-            var stringResponce = await _caller.CallAsync($"latest?currencies={_settings.defaultCurrency}&base_currency={_settings.baseCurrency}");
+            var stringResponce = await _caller.CallAsync($"latest?currencies={_settings.DefaultCurrency}&base_currency={_settings.BaseCurrency}");
             ApiResponse castResponse = JsonSerializer.Deserialize<ApiResponse>(stringResponce);
-            CurrencyLoadBase body = new(castResponse, _settings.currencyRoundCount);
+            CurrencyLoadBase body = new(castResponse, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 
@@ -64,11 +64,11 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("{currencyCode}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
-        public async Task<IActionResult> GetBase(string currencyCode)
+        public async Task<IActionResult> GetBase([FromRoute]string currencyCode)
         {
-            var stringResponce = await _caller.CallAsync($"latest?currencies={currencyCode}&base_currency={_settings.baseCurrency}");
+            var stringResponce = await _caller.CallAsync($"latest?currencies={currencyCode}&base_currency={_settings.BaseCurrency}");
             ApiResponse castResponse = JsonSerializer.Deserialize<ApiResponse>(stringResponce);
-            CurrencyLoadBase body = new(castResponse, _settings.currencyRoundCount);
+            CurrencyLoadBase body = new(castResponse, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 
@@ -92,42 +92,15 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("{currencyCode}/{date}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadWDate))]
-        public async Task<IActionResult> GetBase(string currencyCode, string date)
+        public async Task<IActionResult> GetBase([FromRoute] string currencyCode,[FromRoute] DateOnly date)
         {
-            var stringResponce = await _caller.CallAsync($"historical?currencies={currencyCode}&date={date}&base_currency={_settings.baseCurrency}");
+            var stringResponce = await _caller.CallAsync($"historical?currencies={currencyCode}&date={date}&base_currency={_settings.BaseCurrency}");
             ApiResponse castResponse = JsonSerializer.Deserialize<ApiResponse>(stringResponce);
-            CurrencyLoadWDate body = new(castResponse, _settings.currencyRoundCount);
+            CurrencyLoadWDate body = new(castResponse, _settings.CurrencyRoundCount, date);
             return Ok(body);
         }
 
 
-        /// <summary>
-        /// Get default settings and token quota
-        /// </summary>
-        /// <response code="200">
-        /// if successful
-        /// </response>
-        /// <response code="500">
-        /// if unexpected error occurred
-        /// </response>
-        [HttpGet("/settings")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiStatus))]
-        public async Task<IActionResult> GetSettings()
-        {
-            StatusResponce statusModel = JsonSerializer.Deserialize<StatusResponce>(await _caller.CallAsync("status", false));
-            int requestLimit = statusModel.quotas.month.total;
-            int requestCount = statusModel.quotas.month.used;
-
-            ApiStatus body = new ApiStatus()
-            {
-                baseCurrency = _settings.baseCurrency,
-                defaultCurrency = _settings.defaultCurrency,
-                requestCount = requestCount,
-                requestLimit = requestLimit,
-                currencyRoundCount = _settings.currencyRoundCount
-            };
-
-            return Ok(body);
-        }
+        
     }
 }

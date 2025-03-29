@@ -2,8 +2,10 @@
 {
     public class DefaultSettings
     {
-        public string defaultCurrency { get; set; } = "";
-        public string baseCurrency { get; set; } = "";
-        public int currencyRoundCount { get; set; } = 0;
+        public string DefaultCurrency { get; set; }
+        public string BaseCurrency { get; set; }
+        public int CurrencyRoundCount { get; set; }
+        public string ApiKey { get; set; }
+        public string BaseURL { get; set; }
     }
 }

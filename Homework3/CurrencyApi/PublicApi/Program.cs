@@ -1,18 +1,30 @@
 using Fuse8.BackendInternship.PublicApi;
 using Microsoft.AspNetCore;
+using Serilog;
+using Serilog.Exceptions;
+using Serilog.Exceptions.Core;
+using Serilog.Exceptions.Filters;
 
-var webHost = WebHost
+var webHost = Host
 	.CreateDefaultBuilder(args)
-	.UseStartup<Startup>()
-	.Build();
+	.ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>()).UseSerilog(
+		(context, _, loggerConfig) =>
+		{
+			loggerConfig
+			.ReadFrom.Configuration(context.Configuration)
+			.Enrich.FromLogContext()
+			.Enrich.WithExceptionDetails(
+				new DestructuringOptionsBuilder().WithFilter(
+					new IgnorePropertyByNameExceptionFilter(
+						nameof(Exception.StackTrace),
+						nameof(Exception.Message),
+						nameof(Exception.TargetSite),
+						nameof(Exception.Source),
+						nameof(Exception.HResult),
+						"Type")
+					)
+				);
+		}
+	).Build();
 
-var builder = WebApplication.CreateBuilder(args);
-
-
-builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-	.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true)
-	.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
-
-var app = builder.Build();
 await webHost.RunAsync();
