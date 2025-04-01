@@ -11,12 +11,12 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     public class SettingsController:ControllerBase
     {
 
-        private readonly IExternalCallerService _caller;
         private readonly DefaultSettings _settings;
-        public SettingsController(IExternalCallerService caller, IOptionsMonitor<DefaultSettings> settings)
+        private readonly GrpcCurrencyService _grpcClient;
+        public SettingsController(IOptionsMonitor<DefaultSettings> settings, GrpcCurrencyService client)
         {
-            _caller = caller;
             _settings = settings.CurrentValue;
+            _grpcClient = client;
         }
 
         /// <summary>
@@ -32,17 +32,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MyStatus))]
         public async Task<IActionResult> GetSettings()
         {
-            StatusResponse statusModel = JsonSerializer.Deserialize<StatusResponse>(await _caller.CallAsync("status", false));
-            int requestLimit = statusModel.Quotas.Month.Total;
-            int requestCount = statusModel.Quotas.Month.Used;
-
+            var internalSettings = await _grpcClient.GetStatus();
             MyStatus body = new MyStatus()
             {
-                BaseCurrency = _settings.BaseCurrency,
+                BaseCurrency = internalSettings.BaseCurrency.ToString().ToUpper(),
                 DefaultCurrency = _settings.DefaultCurrency,
-                RequestCount = requestCount,
-                RequestLimit = requestLimit,
-                RoundingPrecision = _settings.CurrencyRoundCount
+                RoundingPrecision = _settings.CurrencyRoundCount,
+                HasTokens = internalSettings.HasRequests
             };
 
             return Ok(body);

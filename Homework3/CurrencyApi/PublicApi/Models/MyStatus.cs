@@ -18,15 +18,10 @@ namespace Fuse8.BackendInternship.PublicApi.Models
         [JsonPropertyName("baseCurrency")]
         public string BaseCurrency { get; set; } = "";
         /// <summary>
-        /// Overall number of calls
+        /// Do you have tokens to make requests
         /// </summary>
-        [JsonPropertyName("requestLimit")]
-        public int RequestLimit { get; set; } = 0;
-        /// <summary>
-        /// Number of used calls
-        /// </summary>
-        [JsonPropertyName("requestCount")]
-        public int RequestCount { get; set; } = 0;
+        [JsonPropertyName("newRequestsAvailable")]
+        public bool HasTokens { get; set; }
         /// <summary>
         /// Precision of rounding exchange rates
         /// </summary>

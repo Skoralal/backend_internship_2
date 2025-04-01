@@ -1,10 +1,12 @@
 ﻿using System.Text.Json;
-using Fuse8.BackendInternship.PublicApi.Models;
-using Fuse8.BackendInternship.PublicApi.Services;
+using System.Threading;
+using InternalApi.Models;
+using InternalApi.Models.Exceptions;
+using InternalApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Fuse8.BackendInternship.PublicApi.Controllers
+namespace InternalApi.Controllers
 {
     /// <summary>
     /// Calls CurrencyAPI
@@ -13,12 +15,12 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     [Route("currency/")]
     public class CurrencyReceiverController:ControllerBase
     {
+        private readonly ExternalCallerService _caller;
         private readonly DefaultSettings _settings;
-        private readonly GrpcCurrencyService _grpcClient;
-        public CurrencyReceiverController(IOptionsMonitor<DefaultSettings> settings, GrpcCurrencyService grpcClient)
+        public CurrencyReceiverController(ExternalCallerService caller, IOptionsMonitor<DefaultSettings> settings)
         {
+            _caller = caller;
             _settings = settings.CurrentValue;
-            _grpcClient = grpcClient;
         }
         /// <summary>
         /// Get exchange rate with default params
@@ -36,14 +38,19 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// if unexpected error occurred
         /// </response>
         [HttpGet()]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<IActionResult> GetBaseAsync()
+        public async Task<IActionResult> GetBaseAsync(CancellationToken cancellationToken)
         {
-            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(_settings.DefaultCurrency);
-            return Ok(body);
+            CurrencyType currencyType = default;
+            if (!Enum.TryParse(_settings.DefaultCurrency.ToUpper(), out currencyType))
+            {
+                throw new CurrencyNotFoundException();
+            };
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            return Ok(currency);
         }
 
 
@@ -64,14 +71,19 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// if unexpected error occurred
         /// </response>
         [HttpGet("{currencyCode}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadBase))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<IActionResult> GetSpecAsync([FromRoute]string currencyCode)
+        public async Task<IActionResult> GetBase([FromRoute]string currencyCode, CancellationToken cancellationToken)
         {
-            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(currencyCode);
-            return Ok(body);
+            CurrencyType currencyType = default;
+            if(!Enum.TryParse(currencyCode.ToUpper(), out currencyType))
+            {
+                throw new CurrencyNotFoundException();
+            };
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            return Ok(currency);
         }
 
 
@@ -93,14 +105,19 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// if unexpected error occurred
         /// </response>
         [HttpGet("{currencyCode}/{date}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyLoadWDate))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<IActionResult> GetDatedAsync([FromRoute] string currencyCode,[FromRoute] DateOnly date)
+        public async Task<IActionResult> GetBase([FromRoute] string currencyCode,[FromRoute] DateOnly date, CancellationToken cancellationToken)
         {
-            CurrencyLoadWDate body = await _grpcClient.GetHistoricalCurrency(currencyCode, date);
-            return Ok(body);
+            CurrencyType currencyType = default;
+            if (!Enum.TryParse(currencyCode.ToUpper(), out currencyType))
+            {
+                throw new CurrencyNotFoundException();
+            };
+            var currency = await _caller.GetCurrencyOnDateAsync(currencyType, date, cancellationToken);
+            return Ok(currency);
         }
 
 

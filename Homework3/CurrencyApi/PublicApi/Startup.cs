@@ -8,6 +8,8 @@ using Fuse8.BackendInternship.PublicApi.Models.Exceptions;
 using Fuse8.BackendInternship.PublicApi.Models.ModelBinders;
 using Fuse8.BackendInternship.PublicApi.Models.SwaggerFilters;
 using Fuse8.BackendInternship.PublicApi.Services;
+using gRPC;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fuse8.BackendInternship.PublicApi;
 
@@ -106,17 +108,17 @@ public class Startup
             }
         }
 
+		services.AddTransient<GrpcCurrencyService>();
 
-
-
-
-		services.AddHttpClient<IExternalCallerService, ExternalCallerService>()
-		.AddAuditHandler(audit => audit
-			.IncludeRequestBody()
-			.IncludeRequestHeaders()
-			.IncludeResponseBody()
-			.IncludeResponseHeaders()
-			.IncludeContentHeaders());
+		services.AddGrpcClient<gRPCCurrency.gRPCCurrencyClient>(grpc =>
+		{
+			grpc.Address = new Uri(_configuration.GetValue<string>("GrpcURL"));
+		}).AddAuditHandler(audit => audit
+            .IncludeRequestBody()
+            .IncludeRequestHeaders()
+            .IncludeResponseBody()
+            .IncludeResponseHeaders()
+            .IncludeContentHeaders());
 
 		services.AddTransient<IncomingRequestsLogger>();
 

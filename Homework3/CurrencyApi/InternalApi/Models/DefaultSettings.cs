@@ -1,4 +1,4 @@
-﻿namespace Fuse8.BackendInternship.PublicApi.Models
+﻿namespace InternalApi.Models
 {
     public class DefaultSettings
     {
@@ -7,6 +7,6 @@
         public int CurrencyRoundCount { get; set; }
         public string ApiKey { get; set; }
         public string BaseURL { get; set; }
-        public string GrpcURL { get; set; }
+        public long SatisfactoryDelay { get; set; }
     }
 }

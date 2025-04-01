@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Fuse8.BackendInternship.PublicApi.Models
+namespace InternalApi.Models
 {
     /// <summary>
     /// Model exchange rates between two currencies w/o date
@@ -16,13 +16,14 @@ namespace Fuse8.BackendInternship.PublicApi.Models
         /// Exchange rate
         /// </summary>
         [JsonPropertyName("value")]
-        public double Value { get; set; }
+        public decimal Value { get; set; }
         public CurrencyLoadBase(ApiResponse response, int precision)
         {
-            (this.Code, this.Value) = response.Data.Values.First();
+            Code = response.Data.First().Value.Code;
+            Value = response.Data.First().Value.Value;
             Value = Math.Round(Value, precision);
         }
-        public CurrencyLoadBase(){}
+
     }
     /// <summary>
     /// Model of exchange rates between two currencies w/ date
@@ -38,6 +39,5 @@ namespace Fuse8.BackendInternship.PublicApi.Models
         {
             Date = date;
         }
-        public CurrencyLoadWDate(){}
     }
 }
