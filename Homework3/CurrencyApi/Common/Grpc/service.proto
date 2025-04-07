@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option csharp_namespace = "gRPC";
+import "google/protobuf/empty.proto";
+
+service gRPCCurrency {
+    rpc GetCurrencyOnDate (CurrencyOnDateRequest) returns (CurrencyDTOResponse);
+    rpc GetCurrentCurrency (CurrentCurrencyRequest) returns (CurrencyDTOResponse);
+    rpc GetStatus (google.protobuf.Empty) returns (GrpcStatusResponse);
+}
+
+enum GrpcCurrencyType {
+    NotSet = 0;
+    USD = 1;
+    RUB = 2;
+    KZT = 3;
+  }
+  
+  message CurrencyDTOResponse {
+    GrpcCurrencyType CurrencyType = 1;
+    double Value = 2;
+  }
+
+message CurrencyOnDateRequest {
+    GrpcCurrencyType CurrencyType = 1;
+    int64 Date = 2; // DateTime.Ticks
+  }
+  
+  message CurrentCurrencyRequest {
+    GrpcCurrencyType CurrencyType = 1;
+  }
+  message GrpcStatusResponse {
+      bool hasRequests = 1;
+      GrpcCurrencyType BaseCurrency = 2;
+  }

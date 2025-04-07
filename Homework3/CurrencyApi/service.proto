@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option csharp_namespace = "gRPC";
+
+service gRPCCurrency {
+    rpc GetCurrencyOnDate (CurrencyOnDateRequest) returns (CurrencyDTO);
+    rpc GetCurrentCurrency (CurrentCurrencyRequest) returns (CurrencyDTO);
+}
+
+enum CurrencyType {
+    USD = 0;
+    RUB = 1;
+    KZT = 2;
+  }
+  
+  message CurrencyDTO {
+    CurrencyType currency_type = 1;
+    double value = 2;
+  }
+
+  // Request message for fetching currency on a specific date
+message CurrencyOnDateRequest {
+    CurrencyType currency_type = 1;
+    string date = 2; // Use ISO 8601 format (yyyy-MM-dd) since DateOnly is not supported in Protobuf
+  }
+  
+  // Request message for fetching current currency
+  message CurrentCurrencyRequest {
+    CurrencyType currency_type = 1;
+  }
