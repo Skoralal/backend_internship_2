@@ -6,29 +6,30 @@ import "google/protobuf/empty.proto";
 service gRPCCurrency {
     rpc GetCurrencyOnDate (CurrencyOnDateRequest) returns (CurrencyDTOResponse);
     rpc GetCurrentCurrency (CurrentCurrencyRequest) returns (CurrencyDTOResponse);
-    rpc GetStatus (google.protobuf.Empty) returns (Status);
+    rpc GetStatus (google.protobuf.Empty) returns (GrpcStatusResponse);
 }
 
-enum CurrencyType {
-    USD = 0;
-    RUB = 1;
-    KZT = 2;
+enum GrpcCurrencyType {
+    NotSet = 0;
+    USD = 1;
+    RUB = 2;
+    KZT = 3;
   }
   
   message CurrencyDTOResponse {
-    CurrencyType CurrencyType = 1;
+    GrpcCurrencyType CurrencyType = 1;
     double Value = 2;
   }
 
 message CurrencyOnDateRequest {
-    CurrencyType CurrencyType = 1;
+    GrpcCurrencyType CurrencyType = 1;
     int64 Date = 2; // DateTime.Ticks
   }
   
   message CurrentCurrencyRequest {
-    CurrencyType CurrencyType = 1;
+    GrpcCurrencyType CurrencyType = 1;
   }
-  message Status {
+  message GrpcStatusResponse {
       bool hasRequests = 1;
-      CurrencyType BaseCurrency = 2;
+      GrpcCurrencyType BaseCurrency = 2;
   }

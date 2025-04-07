@@ -1,4 +1,5 @@
-﻿using InternalApi.Models;
+﻿using Common.Models;
+using InternalApi.Models;
 
 namespace InternalApi.Contracts;
 

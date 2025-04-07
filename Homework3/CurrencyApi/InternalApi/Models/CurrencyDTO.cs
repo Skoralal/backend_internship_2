@@ -1,4 +1,6 @@
-﻿namespace InternalApi.Models
+﻿using Common.Models;
+
+namespace InternalApi.Models
 {
     /// <summary>
     /// Курс валюты

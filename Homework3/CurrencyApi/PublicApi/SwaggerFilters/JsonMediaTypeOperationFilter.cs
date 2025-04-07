@@ -2,7 +2,7 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Fuse8.BackendInternship.PublicApi.Models.SwaggerFilters
+namespace Fuse8.BackendInternship.PublicApi.SwaggerFilters
 {
     public class JsonMediaTypeOperationFilter : IOperationFilter
     {

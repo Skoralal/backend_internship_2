@@ -1,6 +1,8 @@
-﻿namespace InternalApi.Models
+﻿using Common.Models;
+
+namespace InternalApi.Models
 {
-    public class Status
+    public class GrpcStatusResponse
     {
         /// <summary>
         /// can make a request or not

@@ -1,4 +1,5 @@
-﻿using Fuse8.BackendInternship.PublicApi.Models;
+﻿using Common.Models;
+using Fuse8.BackendInternship.PublicApi.Models;
 using gRPC;
 
 namespace Fuse8.BackendInternship.PublicApi.Services
@@ -10,34 +11,33 @@ namespace Fuse8.BackendInternship.PublicApi.Services
         {
             _client = client;
         }
-        public async Task<CurrencyLoadBase> GetCurrentCurrency(string currencyCode)
+        public async Task<CurrencyLoadBase> GetCurrentCurrency(CurrencyType currencyType, byte precision, CancellationToken cancellation)
         {
-            CurrencyType currencyType = Enum.Parse<CurrencyType>(currencyCode, true);
-            var dto = await _client.GetCurrentCurrencyAsync(new() { CurrencyType = currencyType});
+            var dto = await _client.GetCurrentCurrencyAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType}, cancellationToken:cancellation);
             CurrencyLoadBase output = new()
             {
-                Code = dto.CurrencyType.ToString(),
-                Value = dto.Value,
+                Code = (CurrencyType)dto.CurrencyType,
+                Value = Math.Round(dto.Value, precision),
             };
             return output;
         }
 
-        public async Task<CurrencyLoadWDate> GetHistoricalCurrency(string currencyCode, DateOnly dateOnly)
+        public async Task<CurrencyLoadWDate> GetHistoricalCurrency(CurrencyType currencyType, DateOnly dateOnly, byte precision, CancellationToken cancellation)
         {
-            CurrencyType currencyType = Enum.Parse<CurrencyType>(currencyCode, true);
-            var dto = await _client.GetCurrencyOnDateAsync(new() { CurrencyType = currencyType, Date = dateOnly.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc).Ticks });
+            var dto = await _client.GetCurrencyOnDateAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType
+                , Date = dateOnly.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc).Ticks }, cancellationToken: cancellation);
             CurrencyLoadWDate output = new()
             {
-                Code = dto.CurrencyType.ToString(),
-                Value = dto.Value,
+                Code = (CurrencyType)dto.CurrencyType,
+                Value = Math.Round(dto.Value, precision),
                 Date = dateOnly
             };
             return output;
         }
 
-        public async Task<Status> GetStatus()
+        public async Task<GrpcStatusResponse> GetStatus(CancellationToken cancellation)
         {
-            return await _client.GetStatusAsync(new Google.Protobuf.WellKnownTypes.Empty());
+            return await _client.GetStatusAsync(new Google.Protobuf.WellKnownTypes.Empty(), cancellationToken: cancellation);
         }
     }
 }

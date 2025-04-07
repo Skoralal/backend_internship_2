@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Common.Models;
 
 namespace Fuse8.BackendInternship.PublicApi.Models
 {
@@ -11,7 +12,7 @@ namespace Fuse8.BackendInternship.PublicApi.Models
         /// ISO 4217 currency code
         /// </summary>
         [JsonPropertyName("code")]
-        public string Code { get; set; }
+        public CurrencyType Code { get; set; }
         /// <summary>
         /// Exchange rate
         /// </summary>

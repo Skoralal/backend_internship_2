@@ -1,4 +1,5 @@
-﻿using InternalApi.Models;
+﻿using Common.Models;
+using InternalApi.Models;
 using InternalApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -12,8 +13,8 @@ namespace InternalApi.Controllers
     public class StatusController:ControllerBase
     {
         private readonly ExternalCallerService _caller;
-        private readonly DefaultSettings _settings;
-        public StatusController(ExternalCallerService caller, IOptionsSnapshot<DefaultSettings> settings)
+        private readonly AppOptions _settings;
+        public StatusController(ExternalCallerService caller, IOptionsSnapshot<AppOptions> settings)
         {
             _caller = caller;
             _settings = settings.Value;
@@ -24,12 +25,12 @@ namespace InternalApi.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpGet("getInfo")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Status))]
-        public async Task<IActionResult> GetInfoAsync(CancellationToken cancellationToken)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiStatusResponse))]
+        public async Task<ActionResult<ApiStatusResponse>> GetInfoAsync(CancellationToken cancellationToken)
         {
-            var status = new gRPC.Status()
+            var status = new GrpcStatusResponse()
             {
-                BaseCurrency = System.Enum.Parse<gRPC.CurrencyType>(_settings.BaseCurrency, true),
+                BaseCurrency = System.Enum.Parse<CurrencyType>(_settings.BaseCurrency, true),
                 HasRequests = await _caller.HasTokens(),
             };
             return Ok(status);

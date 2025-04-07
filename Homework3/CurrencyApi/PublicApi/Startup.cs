@@ -6,8 +6,8 @@ using Fuse8.BackendInternship.PublicApi.Middleware;
 using Fuse8.BackendInternship.PublicApi.Models;
 using Fuse8.BackendInternship.PublicApi.Models.Exceptions;
 using Fuse8.BackendInternship.PublicApi.Models.ModelBinders;
-using Fuse8.BackendInternship.PublicApi.Models.SwaggerFilters;
 using Fuse8.BackendInternship.PublicApi.Services;
+using Fuse8.BackendInternship.PublicApi.SwaggerFilters;
 using gRPC;
 using Microsoft.Extensions.DependencyInjection;
 

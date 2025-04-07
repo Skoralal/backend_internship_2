@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Common.Models;
 
 namespace Fuse8.BackendInternship.PublicApi.Models
 {
@@ -13,11 +14,11 @@ namespace Fuse8.BackendInternship.PublicApi.Models
     {
         [JsonPropertyName("code")]
 
-        public string Code { get; init; }
+        public CurrencyType Code { get; init; }
         [JsonPropertyName("value")]
 
         public double Value { get; init; }
-        public void Deconstruct(out string code, out double value)
+        public void Deconstruct(out CurrencyType code, out double value)
         {
             code = this.Code;
             value = this.Value;

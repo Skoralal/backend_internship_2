@@ -1,7 +1,8 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Fuse8.BackendInternship.PublicApi.Models;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Fuse8.BackendInternship.PublicApi.Models.SwaggerFilters
+namespace Fuse8.BackendInternship.PublicApi.SwaggerFilters
 {
     /// <summary>
     /// Adds swagger description for the error response type

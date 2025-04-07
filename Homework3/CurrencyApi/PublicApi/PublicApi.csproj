@@ -19,12 +19,26 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
         <PackageReference Include="Serilog" Version="4.2.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
-		<Protobuf Include="gRPC/service.proto" GrpcServices="Client" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="gRPC\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Protobuf Include="..\Common\Grpc\service.proto">
+        <Link>gRPC\service.proto</Link>
+      </Protobuf>
     </ItemGroup>
 
 </Project>

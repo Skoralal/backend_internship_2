@@ -20,7 +20,7 @@ namespace InternalApi.Models
         public Month Month { get; set; }
     }
 
-    public class StatusResponse
+    public class ApiStatusResponse
     {
         [JsonPropertyName("quotas")]
         public Quotas Quotas { get; set; }

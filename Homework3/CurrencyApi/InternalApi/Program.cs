@@ -11,6 +11,7 @@ using Serilog.Exceptions.Core;
 using Serilog.Exceptions.Filters;
 using Serilog.Exceptions;
 using InternalApi.Models.Exceptions;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog(
@@ -41,9 +42,9 @@ builder.Services.AddControllers(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 var _configuration = builder.Configuration;
-builder.Services.Configure<DefaultSettings>(_configuration.GetSection("DefaultSettings"));
-builder.Services.Configure<DefaultSettings>(_configuration.GetSection("SecretSettings"));
-builder.Services.Configure<SecretSettings>(_configuration.GetSection("SecretSettings"));
+builder.Services.Configure<AppOptions>(_configuration.GetSection("DefaultSettings"));
+builder.Services.Configure<NetOptions>(_configuration.GetSection("SecretSettings"));
+builder.Services.Configure<NetOptions>(_configuration.GetSection("NetOptions"));
 builder.Services.AddHttpClient<ExternalCallerService>().AddAuditHandler(audit => audit
         	.IncludeRequestBody()
             .IncludeRequestHeaders()
@@ -57,7 +58,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename), includeControllerXmlComments:true);
     options.OperationFilter<HttpCodesDocOpFilter>();
     options.DocumentFilter<ErrorResponseDocumentFilter>();
     options.OperationFilter<JsonMediaTypeOperationFilter>();
@@ -118,22 +119,9 @@ void HideSecrets(AuditScope auditScope)
 
 builder.Services.AddTransient<IncomingRequestsLogger>();
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    var grpcPort = _configuration.GetValue<int>("gRPCPort");
-    options.ListenAnyIP(grpcPort, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http2;
-    });
-
-    var httpPort = _configuration.GetValue<int>("HTTPPort");
-    options.ListenAnyIP(httpPort, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1;
-    });
-});
 var app = builder.Build();
 
+var _netOptions = app.Services.GetRequiredService<IOptions<NetOptions>>().Value;
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -149,7 +137,7 @@ app.UseMiddleware<IncomingRequestsLogger>();
 
 
 app.UseWhen(
-    predicate: context => context.Connection.LocalPort == _configuration.GetValue<int>("gRPCPort"),
+    predicate: context => context.Connection.LocalPort == _netOptions.gRPCPort,
     configuration: grpcBuilder =>
     {
         grpcBuilder.UseRouting();
@@ -158,7 +146,7 @@ app.UseWhen(
     );
 
 app.UseWhen(
-    predicate: context => context.Connection.LocalPort == builder.Configuration.GetValue<int>("HTTPPort"),
+    predicate: context => context.Connection.LocalPort == _netOptions.HTTPPort,
     configuration: httpBuilder =>
     {
         httpBuilder.UseRouting()

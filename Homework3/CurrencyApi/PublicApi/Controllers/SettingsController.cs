@@ -30,9 +30,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("/settings")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MyStatus))]
-        public async Task<IActionResult> GetSettings()
+        public async Task<ActionResult<MyStatus>> GetSettings(CancellationToken cancellation)
         {
-            var internalSettings = await _grpcClient.GetStatus();
+            var internalSettings = await _grpcClient.GetStatus(cancellation);
             MyStatus body = new MyStatus()
             {
                 BaseCurrency = internalSettings.BaseCurrency.ToString().ToUpper(),
