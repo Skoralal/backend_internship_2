@@ -9,9 +9,11 @@ namespace Fuse8.BackendInternship.PublicApi.Services
     public class FavoriteExchangesService
     {
         private static UsersDBContext _dbContext;
-        public FavoriteExchangesService(UsersDBContext dbContext)
+        ILogger<UsersDBContext> _logger;
+        public FavoriteExchangesService(UsersDBContext dbContext, ILogger<UsersDBContext> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task AddFavoriteAsync(FavoriteRateDBObject favoriteRate)
@@ -30,6 +32,7 @@ namespace Fuse8.BackendInternship.PublicApi.Services
             }
             await _dbContext.AddAsync(favoriteRate);
             await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Added new favorite rate, name {name}", favoriteRate.Name);
             return;
         }
 
@@ -80,6 +83,8 @@ namespace Fuse8.BackendInternship.PublicApi.Services
             await _dbContext.FavoriteExchanges.Where(line => line.Name == name).ExecuteUpdateAsync(setters => setters
                 .SetProperty(e => e.SelectedCurrencyType, currency).SetProperty(e => e.BaseCurrencyType, baseCurrency).SetProperty(e=>e.Name, newName));
             await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Edited favorite rate, name {oldName} --> {newName}; selected currency {oldCur} --> {newCur}; base currency {oldBase} --> {newBase}",
+                name, newName, rate.BaseCurrencyType, baseCurrency, rate.BaseCurrencyType, baseCurrency);
             return;
         }
 
@@ -92,6 +97,7 @@ namespace Fuse8.BackendInternship.PublicApi.Services
             }
             _dbContext.FavoriteExchanges.Remove(toDelete);
             await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Deleted favorite rate, name {name}", name);
         }
 
         private async Task<bool> IsNameUniqueAsync(string name)
