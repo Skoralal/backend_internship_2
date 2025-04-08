@@ -12,6 +12,9 @@ using Serilog.Exceptions.Filters;
 using Serilog.Exceptions;
 using InternalApi.Models.Exceptions;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog(
@@ -38,7 +41,15 @@ builder.Services.AddGrpc();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<GlobalExceptionFilter>();
-});
+})// Добавляем глобальные настройки для преобразования Json
+            .AddJsonOptions(
+                options =>
+                {
+                    // Добавляем конвертер для енама
+                    // По умолчанию енам преобразуется в цифровое значение
+                    // Этим конвертером задаем перевод в строковое значение
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 var _configuration = builder.Configuration;
@@ -51,7 +62,7 @@ builder.Services.AddHttpClient<ExternalCallerService>().AddAuditHandler(audit =>
             .IncludeResponseBody()
             .IncludeResponseHeaders()
             .IncludeContentHeaders());
-builder.Services.AddSingleton<CacheService>();
+builder.Services.AddTransient<CacheService>();
 
 
 builder.Services.AddEndpointsApiExplorer();
@@ -118,7 +129,16 @@ void HideSecrets(AuditScope auditScope)
 
 
 builder.Services.AddTransient<IncomingRequestsLogger>();
-
+builder.Services.AddDbContext<CacheDBContext>(
+    options =>
+    {
+        options.UseNpgsql(connectionString: _configuration.GetConnectionString("Cache"),
+            npgsqlOptionsAction: optionsBuilder =>
+            {
+                optionsBuilder.EnableRetryOnFailure();
+                optionsBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "cur");
+            }).UseSnakeCaseNamingConvention();
+    });
 var app = builder.Build();
 
 var _netOptions = app.Services.GetRequiredService<IOptions<NetOptions>>().Value;

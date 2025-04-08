@@ -9,6 +9,8 @@ using Fuse8.BackendInternship.PublicApi.Models.ModelBinders;
 using Fuse8.BackendInternship.PublicApi.Services;
 using Fuse8.BackendInternship.PublicApi.SwaggerFilters;
 using gRPC;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fuse8.BackendInternship.PublicApi;
@@ -121,7 +123,17 @@ public class Startup
             .IncludeContentHeaders());
 
 		services.AddTransient<IncomingRequestsLogger>();
-
+		services.AddTransient<FavoriteExchangesService>();
+        services.AddDbContext<UsersDBContext>(
+		options =>
+		{
+			options.UseNpgsql(connectionString: _configuration.GetConnectionString("Users"),
+				npgsqlOptionsAction: optionsBuilder =>
+				{
+					optionsBuilder.EnableRetryOnFailure();
+					optionsBuilder.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "user");
+				}).UseSnakeCaseNamingConvention();
+		});
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Data.Common;
 
 namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
 {
@@ -21,6 +22,10 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
                     break;
                 case CurrencyNotFoundException NotFoundException:
                     SetResponse(NotFoundException.Message, StatusCodes.Status404NotFound);
+                    break;
+                case CrudOperationException crudException:
+                    _logger.LogError(crudException.Message);
+                    SetResponse(crudException.Message, StatusCodes.Status400BadRequest);
                     break;
                 default:
                     _logger.LogWarning(context.Exception, "Unknown Exception was thrown");

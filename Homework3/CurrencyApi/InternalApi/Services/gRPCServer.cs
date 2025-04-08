@@ -18,7 +18,8 @@ namespace InternalApi.Services
         }
         public override async Task<CurrencyDTOResponse> GetCurrencyOnDate(CurrencyOnDateRequest request, ServerCallContext context)
         {
-            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrencyOnDateAsync((CurrencyType)request.CurrencyType, DateOnly.FromDateTime(new DateTime(request.Date, DateTimeKind.Utc)), context.CancellationToken);
+            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrencyOnDateAsync((CurrencyType)request.CurrencyType,
+                (CurrencyType)request.BaseCurrencyType,  DateOnly.FromDateTime(new DateTime(request.Date, DateTimeKind.Utc)), context.CancellationToken);
             CurrencyDTOResponse response = new CurrencyDTOResponse()
             {
                 CurrencyType = request.CurrencyType,
@@ -29,7 +30,7 @@ namespace InternalApi.Services
 
         public override async Task<CurrencyDTOResponse> GetCurrentCurrency(CurrentCurrencyRequest request, ServerCallContext context)
         {
-            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrentCurrencyAsync((CurrencyType)request.CurrencyType, context.CancellationToken);
+            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrentCurrencyAsync((CurrencyType)request.CurrencyType, (CurrencyType)request.BaseCurrencyType, context.CancellationToken);
             CurrencyDTOResponse response = new CurrencyDTOResponse()
             {
                 CurrencyType = request.CurrencyType,
@@ -41,7 +42,6 @@ namespace InternalApi.Services
         {
             var status = new gRPC.GrpcStatusResponse()
             {
-                BaseCurrency = System.Enum.Parse<GrpcCurrencyType>(_settings.CurrentValue.BaseCurrency, true),
                 HasRequests = await _callerService.HasTokens(),
             };
             return status;

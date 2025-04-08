@@ -14,6 +14,7 @@ namespace InternalApi.Services
         private readonly IOptionsSnapshot<NetOptions> _netOptions;
         private readonly CacheService _cacheService;
         private readonly long _dayInTicks = TimeSpan.FromHours(24).Ticks;
+        private readonly CurrencyType _baseDefault = CurrencyType.USD;
         public ExternalCallerService(HttpClient httpClient, IOptionsSnapshot<AppOptions> settings, CacheService cacheService, IOptionsSnapshot<NetOptions>netOptions)
         {
             _httpClient = httpClient;
@@ -48,55 +49,40 @@ namespace InternalApi.Services
             throw new UnexpectedAPIResponseException(response.StatusCode);
         }
 
-        public async Task<CurrenciesOnDate> GetAllCurrenciesOnDateAsync(string baseCurrency, DateOnly date, CancellationToken cancellationToken)
+        public async Task<CurrenciesOnDate> GetAllCurrenciesOnDateAsync(CurrencyType baseCurrency, DateOnly date, CancellationToken cancellationToken)
         {
-            ApiResponse apiResponse = await GetApiResponseAsync($"historical?&date={date}&base_currency={_appOptions.Value.BaseCurrency}");
+            ApiResponse apiResponse = await GetApiResponseAsync($"historical?&date={date}&base_currency={_baseDefault}");
             CurrenciesOnDate output = new(apiResponse);
-            _cacheService.WriteToCache(output.Currencies, output.LastUpdatedAt);
+            await _cacheService.WriteToCache(output.Currencies, output.LastUpdatedAt.Ticks);
             return output;
         }
 
-        public async Task<Currency[]> GetAllCurrentCurrenciesAsync(string baseCurrency, CancellationToken cancellationToken)
+        public async Task<Currency[]> GetAllCurrentCurrenciesAsync(CurrencyType baseCurrency, CancellationToken cancellationToken)
         {
-            ApiResponse apiResponse = await GetApiResponseAsync($"latest?base_currency={_appOptions.Value.BaseCurrency}");
+            ApiResponse apiResponse = await GetApiResponseAsync($"latest?base_currency={_baseDefault}");
             Currency[] output = apiResponse.Data.Values.Select(x=>new Currency(x.Code, x.Value)).ToArray();
-            _cacheService.WriteToCache(output, DateTime.UtcNow);
+            await _cacheService.WriteToCache(output, DateTime.UtcNow.Ticks);
             return output;
         }
 
-        public async Task<CurrencyDTO> GetCurrencyOnDateAsync(CurrencyType currencyType, DateOnly date, CancellationToken cancellationToken)
+        public async Task<CurrencyDTO> GetCurrencyOnDateAsync(CurrencyType currencyType,CurrencyType baseType, DateOnly date, CancellationToken cancellationToken)
         {
-            CurrencyDTO currencyDTO;
-            if(!_cacheService.GetFromCache(date.ToDateTime(TimeOnly.MaxValue).Ticks, currencyType, _dayInTicks, out currencyDTO))
+            CurrencyDTO? currencyDTO = await _cacheService.GetFromCache(date.ToDateTime(TimeOnly.MaxValue).Ticks, currencyType, _dayInTicks, baseType);
+            if(currencyDTO is null)
             {
-                var allRates = await GetAllCurrenciesOnDateAsync(_appOptions.Value.BaseCurrency, date, cancellationToken);
-                var currencyCodeString = currencyType.ToString();
-                currencyDTO = allRates.Currencies
-                    .Where(currency => currency.Code == currencyCodeString)
-                    .Select(x=>new CurrencyDTO()
-                {
-                        CurrencyType = currencyType,
-                        Value = x.Value,
-                }).First();
+                await GetAllCurrenciesOnDateAsync(baseType, date, cancellationToken);
+                currencyDTO = await _cacheService.GetFromCache(date.ToDateTime(TimeOnly.MaxValue).Ticks, currencyType, _dayInTicks, baseType);
             }
             return currencyDTO;
         }
 
-        public async Task<CurrencyDTO> GetCurrentCurrencyAsync(CurrencyType currencyType, CancellationToken cancellationToken)
+        public async Task<CurrencyDTO> GetCurrentCurrencyAsync(CurrencyType currencyType, CurrencyType baseType, CancellationToken cancellationToken)
         {
-            CurrencyDTO currencyDTO;
-            if (!_cacheService.GetFromCache( DateTime.UtcNow.Ticks, currencyType, TimeSpan.FromHours(_appOptions.Value.CacheExpirationTimeHours).Ticks,
-                out currencyDTO))
+            CurrencyDTO? currencyDTO = await _cacheService.GetFromCache(DateTime.UtcNow.Ticks, currencyType, TimeSpan.FromHours(_appOptions.Value.CacheExpirationTimeHours).Ticks, baseType);
+            if (currencyDTO is null)
             {
-                var allRates = await GetAllCurrentCurrenciesAsync(_appOptions.Value.BaseCurrency, cancellationToken);
-                var currencyCodeString = currencyType.ToString();
-                currencyDTO = allRates
-                    .Where(currency => currency.Code == currencyCodeString)
-                    .Select(x => new CurrencyDTO()
-                    {
-                        CurrencyType = currencyType,
-                        Value = x.Value,
-                    }).First();
+                await GetAllCurrentCurrenciesAsync(baseType, cancellationToken);
+                currencyDTO = await _cacheService.GetFromCache(DateTime.UtcNow.Ticks, currencyType, TimeSpan.FromHours(_appOptions.Value.CacheExpirationTimeHours).Ticks, baseType);
             }
             return currencyDTO;
         }

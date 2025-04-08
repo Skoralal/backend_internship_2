@@ -1,6 +1,9 @@
 ﻿using System.Text.Json;
+using System.Threading.Tasks;
 using Common.Models;
 using InternalApi.Models;
+using InternalApi.Models.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace InternalApi.Services
 {
@@ -8,37 +11,47 @@ namespace InternalApi.Services
     {
         private static readonly object _lock = new();
         private readonly string _cacheFolder;
-        public CacheService()
+        CacheDBContext _dbContext;
+        public CacheService(CacheDBContext dBContext)
         {
             _cacheFolder = Path.Combine(Directory.GetCurrentDirectory(), "cache");
+            _dbContext = dBContext;
         }
-        public void WriteToCache(Currency[] data, DateTime time)
+        public async Task WriteToCache(Currency[] data, long time = -1)
         {
-            string jsonString = JsonSerializer.Serialize(data);
-            lock (_lock)
+            if (time == -1)
             {
-                File.WriteAllText(_cacheFolder + "/" + time.Ticks + ".json", jsonString);
+                time = DateTime.UtcNow.Ticks;
             }
-
+            CurrencyDateBaseObject[] dbObjects = data.Select(cur => new CurrencyDateBaseObject(cur, time)).ToArray();
+            _dbContext.ExchangeRates.AddRange(dbObjects);
+            await _dbContext.SaveChangesAsync();
+            return;
         }
-        public bool GetFromCache(long ticksDateTime, CurrencyType currencyCode, long ticksSatisfactoryDelay, out CurrencyDTO currency)
+        public async Task<CurrencyDTO?> GetFromCache(long ticksDateTime, CurrencyType currencyCode, long ticksSatisfactoryDelay,
+            CurrencyType baseCurrencyCode = CurrencyType.USD)
         {
-            currency = null;
             long borderEligible = ticksDateTime - ticksSatisfactoryDelay;
-            long fileName = Directory.GetFiles(_cacheFolder)
-                                          .Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
-                                          .Where(x=>x<=ticksDateTime).Where(x=>x>borderEligible)
-                                          .OrderByDescending(x=>x)
-                                          .FirstOrDefault(-1);
-            if(fileName == -1)
+            var rates = _dbContext.ExchangeRates.Where(entry => entry.ActualityTime < ticksDateTime)
+                .Where(entry => entry.ActualityTime > borderEligible).OrderByDescending(entry => entry.ActualityTime)
+                .AsNoTracking();
+
+            var baseRate = await rates.Where(rate=>rate.Code==baseCurrencyCode.ToString()).FirstOrDefaultAsync();
+            var neededRate = await rates.Where(rate=>rate.Code==currencyCode.ToString()).FirstOrDefaultAsync();
+            if(baseRate is null && neededRate is null)
             {
-                return false;
+                return null;
             }
-            string json = File.ReadAllText(_cacheFolder + "/" + fileName + ".json");
-            Currency[] exchenges = JsonSerializer.Deserialize<Currency[]>(json);
-            string currencyCodeString = currencyCode.ToString();
-            currency = new(exchenges.First(x => x.Code == currencyCodeString));
-            return true;
+            else if (baseRate is null ^ neededRate is null)
+            {
+                throw new CurrencyNotFoundException("no data for one of the currencies");
+            }
+            CurrencyDTO currency = new()
+            {
+                CurrencyType = currencyCode,
+                Value = 1 / baseRate.ExchangeRate * neededRate.ExchangeRate
+            };
+            return currency;
         }
     }
 }

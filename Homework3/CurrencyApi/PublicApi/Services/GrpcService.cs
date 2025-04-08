@@ -11,9 +11,10 @@ namespace Fuse8.BackendInternship.PublicApi.Services
         {
             _client = client;
         }
-        public async Task<CurrencyLoadBase> GetCurrentCurrency(CurrencyType currencyType, byte precision, CancellationToken cancellation)
+        public async Task<CurrencyLoadBase> GetCurrentCurrency(CurrencyType currencyType, CurrencyType baseCurrencyType, byte precision, CancellationToken cancellation)
         {
-            var dto = await _client.GetCurrentCurrencyAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType}, cancellationToken:cancellation);
+            var dto = await _client.GetCurrentCurrencyAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType,
+                BaseCurrencyType = (GrpcCurrencyType)baseCurrencyType }, cancellationToken:cancellation);
             CurrencyLoadBase output = new()
             {
                 Code = (CurrencyType)dto.CurrencyType,
@@ -22,10 +23,11 @@ namespace Fuse8.BackendInternship.PublicApi.Services
             return output;
         }
 
-        public async Task<CurrencyLoadWDate> GetHistoricalCurrency(CurrencyType currencyType, DateOnly dateOnly, byte precision, CancellationToken cancellation)
+        public async Task<CurrencyLoadWDate> GetHistoricalCurrency(CurrencyType currencyType, CurrencyType baseCurrencyType, DateOnly dateOnly, byte precision, CancellationToken cancellation)
         {
-            var dto = await _client.GetCurrencyOnDateAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType
-                , Date = dateOnly.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc).Ticks }, cancellationToken: cancellation);
+            var dto = await _client.GetCurrencyOnDateAsync(new() { CurrencyType = (GrpcCurrencyType)currencyType,
+                BaseCurrencyType  = (GrpcCurrencyType)baseCurrencyType
+                ,Date = dateOnly.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc).Ticks }, cancellationToken: cancellation);
             CurrencyLoadWDate output = new()
             {
                 Code = (CurrencyType)dto.CurrencyType,

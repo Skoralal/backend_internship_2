@@ -43,14 +43,9 @@ namespace InternalApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBaseAsync(CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBaseAsync([FromRoute] CurrencyType currencyCode, CancellationToken cancellationToken)
         {
-            CurrencyType currencyType = default;
-            if (!Enum.TryParse(_settings.DefaultCurrency.ToUpper(), out currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyCode, CurrencyType.USD, cancellationToken);
             return Ok(currency);
         }
 
@@ -71,18 +66,15 @@ namespace InternalApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpGet("{currencyCode}")]
+        [HttpGet("{currencyCode}/{baseCurrencyCode}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute]string currencyCode, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute]CurrencyType currencyCode, 
+            [FromRoute] CurrencyType baseCurrencyCode, CancellationToken cancellationToken)
         {
-            if(!Enum.TryParse(currencyCode.ToUpper(), out CurrencyType currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyCode, baseCurrencyCode, cancellationToken);
             return Ok(currency);
         }
 
@@ -104,19 +96,14 @@ namespace InternalApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpGet("{currencyCode}/{date}")]
+        [HttpGet("{currencyCode}/{baseCurrencyCode}/{date}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute] string currencyCode,[FromRoute] DateOnly date, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute] CurrencyType currencyCode, [FromRoute] CurrencyType baseCurrencyCode, [FromRoute] DateOnly date, CancellationToken cancellationToken)
         {
-            CurrencyType currencyType = default;
-            if (!Enum.TryParse(currencyCode.ToUpper(), out currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrencyOnDateAsync(currencyType, date, cancellationToken);
+            var currency = await _caller.GetCurrencyOnDateAsync(currencyCode, baseCurrencyCode, date, cancellationToken);
             return Ok(currency);
         }
 

@@ -35,9 +35,6 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
             var internalSettings = await _grpcClient.GetStatus(cancellation);
             MyStatus body = new MyStatus()
             {
-                BaseCurrency = internalSettings.BaseCurrency.ToString().ToUpper(),
-                DefaultCurrency = _settings.DefaultCurrency,
-                RoundingPrecision = _settings.CurrencyRoundCount,
                 HasTokens = internalSettings.HasRequests
             };
 

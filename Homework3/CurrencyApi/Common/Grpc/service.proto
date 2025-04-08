@@ -24,12 +24,13 @@ enum GrpcCurrencyType {
 message CurrencyOnDateRequest {
     GrpcCurrencyType CurrencyType = 1;
     int64 Date = 2; // DateTime.Ticks
+    GrpcCurrencyType BaseCurrencyType = 3;
   }
   
   message CurrentCurrencyRequest {
     GrpcCurrencyType CurrencyType = 1;
+    GrpcCurrencyType BaseCurrencyType = 2;
   }
   message GrpcStatusResponse {
       bool hasRequests = 1;
-      GrpcCurrencyType BaseCurrency = 2;
   }
