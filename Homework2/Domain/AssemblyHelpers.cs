@@ -4,6 +4,7 @@ namespace Fuse8.BackendInternship.Domain;
 
 public static class AssemblyHelpers
 {
+	private static readonly string _sysAssName = "System";
 	/// <summary>
 	/// Получает информацию о базовых типах классов из namespace "Fuse8.BackendInternship.Domain", у которых есть наследники.
 	/// </summary>
@@ -14,13 +15,32 @@ public static class AssemblyHelpers
 	/// <returns>Список типов с количеством наследников</returns>
 	public static (string BaseTypeName, int InheritorCount)[] GetTypesWithInheritors()
 	{
-		// Получаем все классы из текущей Assembly
-		var assemblyClassTypes = Assembly.GetAssembly(typeof(AssemblyHelpers))
+
+        // Получаем все классы из текущей Assembly
+        var currentAssembly = Assembly.GetAssembly(typeof(AssemblyHelpers));
+
+        var assemblyClassTypes = currentAssembly
 			!.DefinedTypes
 			.Where(p => p.IsClass);
-
+		var dic = new Dictionary<Type, HashSet<Type>>();
+        foreach (var classType in assemblyClassTypes)
+		{
+			var root = GetBaseType(classType);
+			if(root != null && classType.IsAbstract == false)
+			{
+				if (root.Assembly != currentAssembly)
+				{
+					continue;
+				}
+				if (!dic.ContainsKey(root))
+				{
+					dic.Add(root, new());
+				}
+				dic[root].Add(classType);
+			}
+		}
+		return dic.Select(x=>(x.Key.Name, x.Value.Count)).ToArray();
 		// ToDo: Добавить реализацию
-		throw new NotImplementedException();
 	}
 
 	/// <summary>

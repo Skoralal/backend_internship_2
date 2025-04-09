@@ -12,8 +12,28 @@ public static class ExceptionHandler
 	public static string? Handle(Action action)
 	{
 		// ToDo: Реализовать обработку исключений
-		action();
-		return "Ok";
+		try
+		{ 
+			action();
+        }
+		catch (MoneyException moneyEx)
+		{
+			return moneyEx.Message;
+		}
+		catch (HttpRequestException httpEx) when (httpEx.StatusCode == HttpStatusCode.NotFound)
+		{
+			return "Ресурс не найден";
+		}
+        catch (HttpRequestException httpEx)
+        {
+			return httpEx.StatusCode.ToString();
+        }
+        catch
+		{
+			return "Произошла непредвиденная ошибка";
+		}
+
+        return null;
 	}
 }
 
@@ -31,14 +51,17 @@ public class MoneyException : Exception
 
 public class NotValidKopekCountException : MoneyException
 {
-	public NotValidKopekCountException()
-	{
-	}
+
+    public NotValidKopekCountException()
+        : base("Количество копеек должно быть больше 0 и меньше 99")
+    {
+    }
 }
 
 public class NegativeRubleCountException : MoneyException
 {
-	public NegativeRubleCountException()
-	{
-	}
+    public NegativeRubleCountException()
+        : base("Число рублей не может быть отрицательным")
+    {
+    }
 }
