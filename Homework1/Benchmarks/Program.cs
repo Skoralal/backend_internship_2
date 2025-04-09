@@ -1,7 +1,14 @@
 ﻿using System.Text;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
+/*
+ Метод с интернированными строками надёжно лидирует на около 15-20%
+при равном потреблении памяти по сравнению с методом, использующим константные строки,
+также у оптимизированного метода меньшая вариация по времени выполнения.
+Оптимизированный метод тратит одинкаовое время на поиск слова будь оно в начале, конце или не в списке,
+ */
 
 BenchmarkRunner.Run<StringInternBenchmark>();
 
@@ -32,6 +39,18 @@ public class StringInternBenchmark
 
     public IEnumerable<string> SampleData()
     {
-        yield return new StringBuilder().ToString();
+        List<string> words = new List<string>();
+        words.Add("анекдотцем");
+        words.Add(new StringBuilder("анек"+"дот").ToString());
+        words.Add("проём");
+        words.Add(new StringBuilder("пр" + "о").ToString());
+        words.Add("Стёпка");
+        words.Add(new StringBuilder("Стал" + "ин").ToString());
+        words.Add("каво");
+        words.Add(new StringBuilder("Бер" + "ия").ToString());
+        foreach (var word in words)
+        {
+            yield return word;
+        }
     }
 }
