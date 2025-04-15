@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Common.Models;
+﻿using Common.Models;
 using Fuse8.BackendInternship.PublicApi.Models;
 using Fuse8.BackendInternship.PublicApi.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +11,12 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
     /// </summary>
     [ApiController]
     [Route("currency/")]
-    public class CurrencyReceiverController:ControllerBase
+    public class CurrencyReceiverController : ControllerBase
     {
         private readonly DefaultSettings _settings;
         private readonly GrpcCurrencyService _grpcClient;
         private readonly FavoriteExchangesService _favoriteExchangeService;
-        public CurrencyReceiverController(IOptionsMonitor<DefaultSettings> settings, GrpcCurrencyService grpcClient, 
+        public CurrencyReceiverController(IOptionsMonitor<DefaultSettings> settings, GrpcCurrencyService grpcClient,
             FavoriteExchangesService favoriteExchangeService)
         {
             _settings = settings.CurrentValue;
@@ -46,10 +45,11 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyLoadBase>> GetBaseAsync([FromHeader]CurrencyType baseCurrencyType, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyLoadBase>> GetBaseAsync([FromHeader] CurrencyType baseCurrencyType, CancellationToken cancellationToken)
         {
             CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(Enum.Parse<CurrencyType>(_settings.DefaultCurrency), baseCurrencyType
-                , (byte)_settings.CurrencyRoundCount, cancellation: cancellationToken);
+                , cancellation: cancellationToken);
+            body.Value = Math.Round(body.Value, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 
@@ -79,7 +79,8 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<ActionResult<CurrencyLoadBase>> GetSpecAsync([FromRoute] CurrencyType currencyCode, [FromRoute] CurrencyType baseCurrencyCode, CancellationToken cancellationToken)
         {
-            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(currencyCode,baseCurrencyCode, (byte)_settings.CurrencyRoundCount, cancellation: cancellationToken);
+            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(currencyCode, baseCurrencyCode, cancellation: cancellationToken);
+            body.Value = Math.Round(body.Value, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 
@@ -110,7 +111,8 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         public async Task<ActionResult<CurrencyLoadWDate>> GetDatedAsync([FromRoute] CurrencyType currencyCode, [FromRoute] CurrencyType baseCurrencyCode, [FromRoute] DateOnly date, CancellationToken cancellationToken)
         {
-            CurrencyLoadWDate body = await _grpcClient.GetHistoricalCurrency(currencyCode, baseCurrencyCode, date, (byte)_settings.CurrencyRoundCount, cancellation: cancellationToken);
+            CurrencyLoadWDate body = await _grpcClient.GetHistoricalCurrency(currencyCode, baseCurrencyCode, date, cancellation: cancellationToken);
+            body.Value = Math.Round(body.Value, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 
@@ -141,11 +143,12 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyLoadBase>> GetFavCurrentAsync([FromRoute]string exchangeName, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyLoadBase>> GetFavCurrentAsync([FromRoute] string exchangeName, CancellationToken cancellationToken)
         {
-            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(exchangeName);
-            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(rate.SelectedCurrencyType, rate.BaseCurrencyType, 
-                (byte)_settings.CurrencyRoundCount, cancellation: cancellationToken);
+            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(exchangeName, cancellationToken: cancellationToken);
+            CurrencyLoadBase body = await _grpcClient.GetCurrentCurrency(rate.SelectedCurrencyType, rate.BaseCurrencyType,
+                cancellation: cancellationToken);
+            body.Value = Math.Round(body.Value, _settings.CurrencyRoundCount);
             return Ok(body);
         }
         /// <summary>
@@ -175,12 +178,13 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyLoadBase>> GetFavCurrentAsync([FromRoute]string exchangeName, [FromRoute] DateOnly date, 
+        public async Task<ActionResult<CurrencyLoadBase>> GetFavCurrentAsync([FromRoute] string exchangeName, [FromRoute] DateOnly date,
             CancellationToken cancellationToken)
         {
-            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(exchangeName);
+            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(exchangeName, cancellationToken: cancellationToken);
             CurrencyLoadBase body = await _grpcClient.GetHistoricalCurrency(rate.SelectedCurrencyType, rate.BaseCurrencyType, date,
-                (byte)_settings.CurrencyRoundCount, cancellation: cancellationToken);
+                cancellation: cancellationToken);
+            body.Value = Math.Round(body.Value, _settings.CurrencyRoundCount);
             return Ok(body);
         }
 

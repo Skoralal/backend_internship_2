@@ -10,11 +10,11 @@ namespace InternalApi.Controllers
     /// Check InternalApi information
     /// </summary>
     [Route("settings/")]
-    public class StatusController:ControllerBase
+    public class StatusController : ControllerBase
     {
-        private readonly ExternalCallerService _caller;
+        private readonly HttpCallerService _caller;
         private readonly AppOptions _settings;
-        public StatusController(ExternalCallerService caller, IOptionsSnapshot<AppOptions> settings)
+        public StatusController(HttpCallerService caller, IOptionsSnapshot<AppOptions> settings)
         {
             _caller = caller;
             _settings = settings.Value;
@@ -30,8 +30,8 @@ namespace InternalApi.Controllers
         {
             var status = new GrpcStatusResponse()
             {
-                BaseCurrency = System.Enum.Parse<CurrencyType>(_settings.BaseCurrency, true),
-                HasRequests = await _caller.HasTokens(),
+                BaseCurrency = Enum.Parse<CurrencyType>(_settings.BaseCurrency, true),
+                HasRequests = await _caller.HasTokens(cancellationToken),
             };
             return Ok(status);
         }

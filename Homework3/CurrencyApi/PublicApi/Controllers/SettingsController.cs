@@ -1,14 +1,13 @@
 ﻿using Fuse8.BackendInternship.PublicApi.Models;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 using Fuse8.BackendInternship.PublicApi.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.PublicApi.Controllers
 {
 
     [Route("settings/")]
-    public class SettingsController:ControllerBase
+    public class SettingsController : ControllerBase
     {
 
         private readonly DefaultSettings _settings;

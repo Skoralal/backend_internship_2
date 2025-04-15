@@ -5,7 +5,7 @@
 namespace InternalApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddedExchangeRates : Migration
+    public partial class v10 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -13,18 +13,22 @@ namespace InternalApi.Migrations
             migrationBuilder.EnsureSchema(
                 name: "cur");
 
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:uuid-ossp", ",,");
+
             migrationBuilder.CreateTable(
                 name: "exchange_rates",
                 schema: "cur",
                 columns: table => new
                 {
-                    actuality_time = table.Column<long>(type: "bigint", nullable: false),
-                    code = table.Column<string>(type: "text", nullable: false),
-                    exchange_rate = table.Column<decimal>(type: "numeric", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuid_generate_v4()"),
+                    exchange_rate = table.Column<decimal>(type: "numeric", nullable: false),
+                    actuality_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    code = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_exchange_rates", x => new { x.code, x.actuality_time });
+                    table.PrimaryKey("pk_exchange_rates", x => x.id);
                 });
         }
 
@@ -34,6 +38,9 @@ namespace InternalApi.Migrations
             migrationBuilder.DropTable(
                 name: "exchange_rates",
                 schema: "cur");
+
+            migrationBuilder.AlterDatabase()
+                .OldAnnotation("Npgsql:PostgresExtension:uuid-ossp", ",,");
         }
     }
 }

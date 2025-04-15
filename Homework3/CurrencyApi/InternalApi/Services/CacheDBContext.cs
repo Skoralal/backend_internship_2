@@ -5,16 +5,21 @@ namespace InternalApi.Services
 {
     public class CacheDBContext : DbContext
     {
-        public CacheDBContext(DbContextOptions options):base(options) { }
-
-        public DbSet<CurrencyDateBaseObject> ExchangeRates { get; set; }
+        /// <summary>
+        /// name of the chema used for cache tables
+        /// </summary>
+        public const string SchemaName = "cur";
+        public CacheDBContext(DbContextOptions options) : base(options) { }
+        /// <summary>
+        /// table with all the exchange rates
+        /// </summary>
+        public DbSet<CurrencyDB> ExchangeRates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema("cur");
-
-            modelBuilder.Entity<CurrencyDateBaseObject>()
-                .HasKey(e => new { e.Code, e.ActualityTime });
+            modelBuilder.HasPostgresExtension("uuid-ossp");
+            modelBuilder.HasDefaultSchema(SchemaName);
+            modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
     }
 }

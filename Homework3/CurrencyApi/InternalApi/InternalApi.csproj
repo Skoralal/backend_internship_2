@@ -18,6 +18,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="InterpolatedParser" Version="1.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
@@ -42,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\Common\Grpc\service.proto">
+    <Protobuf Include="..\service.proto">
       <Link>gRPC\service.proto</Link>
     </Protobuf>
   </ItemGroup>

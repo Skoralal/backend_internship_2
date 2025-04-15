@@ -1,118 +1,150 @@
-﻿using System.Data.Common;
-using Common.Models;
+﻿using Common.Models;
 using Fuse8.BackendInternship.PublicApi.Models;
 using Fuse8.BackendInternship.PublicApi.Models.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fuse8.BackendInternship.PublicApi.Services
 {
+    /// <summary>
+    /// service to manipulate favorite exchanges persistent storage
+    /// </summary>
     public class FavoriteExchangesService
     {
-        private static UsersDBContext _dbContext;
-        ILogger<UsersDBContext> _logger;
-        public FavoriteExchangesService(UsersDBContext dbContext, ILogger<UsersDBContext> logger)
+        private readonly UsersDBContext _dbContext;
+        private readonly ILogger<FavoriteExchangesService> _logger;
+        public FavoriteExchangesService(UsersDBContext dbContext, ILogger<FavoriteExchangesService> logger)
         {
             _dbContext = dbContext;
             _logger = logger;
         }
-
-        public async Task AddFavoriteAsync(FavoriteRateDBObject favoriteRate)
+        /// <summary>
+        /// add a favorite rate
+        /// </summary>
+        /// <param name="favoriteRate">model</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="CrudOperationException">if something went wrong during a crud operation, specifics included</exception>
+        public async Task AddFavoriteAsync(FavoriteRateDB favoriteRate, CancellationToken cancellationToken)
         {
-            if(favoriteRate.SelectedCurrencyType == CurrencyType.NotSet || favoriteRate.SelectedCurrencyType == CurrencyType.NotSet)
+            if (favoriteRate.SelectedCurrencyType == CurrencyType.NotSet || favoriteRate.SelectedCurrencyType == CurrencyType.NotSet)
             {
-                throw new CrudOperationException("select both currencies");
+                throw new CrudOperationException("Select both currencies");
             }
-            if (!await IsNameUniqueAsync(favoriteRate.Name))
+            if (!await IsNameUniqueAsync(favoriteRate.Name, cancellationToken: cancellationToken))
             {
-                throw new CrudOperationException($"could not add {favoriteRate.Name} rate, another rate with the same name exists");
+                throw new CrudOperationException($"Could not add '{favoriteRate.Name}' rate, another rate with the same name exists");
             }
-            if(!await IsExchangeSetUniqueAsync(favoriteRate.SelectedCurrencyType, favoriteRate.BaseCurrencyType))
+            if (!await IsExchangeSetUniqueAsync(favoriteRate.SelectedCurrencyType, favoriteRate.BaseCurrencyType, cancellationToken: cancellationToken))
             {
-                throw new CrudOperationException($"could not add {favoriteRate.Name} rate, another rate with the same currencies exists");
+                throw new CrudOperationException($"Could not add '{favoriteRate.Name}' rate, another rate with the same currencies exists");
             }
-            await _dbContext.AddAsync(favoriteRate);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Added new favorite rate, name {name}", favoriteRate.Name);
+            await _dbContext.AddAsync(favoriteRate, cancellationToken: cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            _logger.LogInformation("Added new favorite rate, name '{name}'", favoriteRate.Name);
             return;
         }
-
-        public async Task<FavoriteRateDBObject> GetFavoriteByNameAsync(string name)
+        /// <summary>
+        /// get a favorite rate by name
+        /// </summary>
+        /// <param name="name">name of the rate to search</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="CrudOperationException">if something went wrong during a crud operation, specifics included</exception>
+        public async Task<FavoriteRateDB> GetFavoriteByNameAsync(string name, CancellationToken cancellationToken)
         {
-            FavoriteRateDBObject rate = await _dbContext.FavoriteExchanges.Where(line=>line.Name==name).AsNoTracking().FirstOrDefaultAsync();
+            FavoriteRateDB? rate = await _dbContext.FavoriteExchanges.Where(line => line.Name == name).AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (rate is null)
             {
-                throw new CrudOperationException($"{name} rate not found");
+                throw new CrudOperationException($"'{name}' rate not found");
             }
             return rate;
         }
-
-        public async Task<FavoriteRateDBObject[]> GetAllFavoriteAsync()
+        /// <summary>
+        /// get all existing favorite rates
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<FavoriteRateDB[]> GetAllFavoriteAsync(CancellationToken cancellationToken)
         {
-            FavoriteRateDBObject[] rates = await _dbContext.FavoriteExchanges.AsNoTracking().ToArrayAsync();
-            if (rates.Length == 0)
-            {
-                throw new CrudOperationException($"There is no rates");
-            }
+            FavoriteRateDB[] rates = await _dbContext.FavoriteExchanges.AsNoTracking().ToArrayAsync(cancellationToken: cancellationToken);
             return rates;
         }
-
-        public async Task ReplaceFavoriteByNameAsync(string name,string newName, CurrencyType? currency, CurrencyType? baseCurrency)
+        /// <summary>
+        /// modify existing favorite rate
+        /// </summary>
+        /// <param name="name">name of the rate to be modified</param>
+        /// <param name="model">new data</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="CrudOperationException">if something went wrong during a crud operation, specifics included</exception>
+        public async Task ReplaceFavoriteByNameAsync(string name, FavoriteRateRequestModel model,
+            CancellationToken cancellationToken)
         {
-            if (await IsNameUniqueAsync(name))
+            if (await IsNameUniqueAsync(name, cancellationToken: cancellationToken))
             {
-                throw new CrudOperationException($"there is no rate named {name}");
+                throw new CrudOperationException($"There is no rate named '{name}'");
             }
-            if (name!=newName && !await IsNameUniqueAsync(newName))
+            if (name != model.Name && !await IsNameUniqueAsync(model.Name, cancellationToken: cancellationToken))
             {
-                throw new CrudOperationException($"could not edit {name} rate, another rate with the new name exists");
+                throw new CrudOperationException($"Could not edit '{name}' rate, another rate with the new name exists");
             }
-            var rate = await _dbContext.FavoriteExchanges.Where(line => line.Name == name).FirstAsync();
-            if(currency is null)
+            var rate = await _dbContext.FavoriteExchanges.Where(line => line.Name == name).FirstAsync(cancellationToken: cancellationToken);
+            if (model.Currency == CurrencyType.NotSet)
             {
-                currency = rate.SelectedCurrencyType;
+                model.Currency = rate.SelectedCurrencyType;
             }
-            if (baseCurrency is null)
+            if (model.BaseCurrency == CurrencyType.NotSet)
             {
-                baseCurrency = rate.BaseCurrencyType;
+                model.BaseCurrency = rate.BaseCurrencyType;
             }
-            if (!await IsExchangeSetUniqueAsync((CurrencyType)currency, 
-                (CurrencyType)baseCurrency) && (rate.SelectedCurrencyType != currency && rate.BaseCurrencyType != baseCurrency))
+            if (!await IsExchangeSetUniqueAsync(model.Currency,
+                model.BaseCurrency, cancellationToken: cancellationToken)
+                && (rate.SelectedCurrencyType != model.Currency && rate.BaseCurrencyType != model.BaseCurrency))
             {
-                throw new CrudOperationException($"could not edit {name} rate, another rate with the same currencies exists");
+                throw new CrudOperationException($"Could not edit '{name}' rate, another rate with the same currencies exists");
             }
-            await _dbContext.FavoriteExchanges.Where(line => line.Name == name).ExecuteUpdateAsync(setters => setters
-                .SetProperty(e => e.SelectedCurrencyType, currency).SetProperty(e => e.BaseCurrencyType, baseCurrency).SetProperty(e=>e.Name, newName));
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Edited favorite rate, name {oldName} --> {newName}; selected currency {oldCur} --> {newCur}; base currency {oldBase} --> {newBase}",
-                name, newName, rate.BaseCurrencyType, baseCurrency, rate.BaseCurrencyType, baseCurrency);
+            rate.SelectedCurrencyType = model.Currency;
+            rate.BaseCurrencyType = model.BaseCurrency;
+            rate.Name = model.Name;
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            _logger.LogInformation("Edited favorite rate, name '{oldName}' --> '{newName}'; selected currency '{oldCur}' --> '{newCur}'; base currency '{oldBase}' --> '{newBase}'",
+                name, model.Name, rate.BaseCurrencyType, model.BaseCurrency, rate.BaseCurrencyType, model.BaseCurrency);
             return;
         }
-
-        public async Task DeleteFavoriteByNameAsync(string name)
+        /// <summary>
+        /// delete a favorite rate
+        /// </summary>
+        /// <param name="name">name of the rate to be deleted</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="CrudOperationException">if something went wrong during a crud operation, specifics included</exception>
+        public async Task DeleteFavoriteByNameAsync(string name, CancellationToken cancellationToken)
         {
-            var toDelete = await _dbContext.FavoriteExchanges.Where(line => line.Name == name).FirstOrDefaultAsync();
+            var toDelete = await _dbContext.FavoriteExchanges.Where(line => line.Name == name).FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (toDelete is null)
             {
-                throw new CrudOperationException($"{name} rate did not exist");
+                throw new CrudOperationException($"'{name}' rate did not exist");
             }
             _dbContext.FavoriteExchanges.Remove(toDelete);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Deleted favorite rate, name {name}", name);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            _logger.LogInformation("Deleted favorite rate, name '{name}'", name);
         }
 
-        private async Task<bool> IsNameUniqueAsync(string name)
+        private async Task<bool> IsNameUniqueAsync(string name, CancellationToken cancellationToken)
         {
-            var evidence = await _dbContext.FavoriteExchanges.Where(x => x.Name == name).FirstOrDefaultAsync();
-            if (evidence is null)
+            var evidence = await _dbContext.FavoriteExchanges.Where(x => x.Name == name).AnyAsync(cancellationToken: cancellationToken);
+            if (!evidence)
             {
                 return true;
             }
             return false;
         }
 
-        private async Task<bool> IsExchangeSetUniqueAsync(CurrencyType cur, CurrencyType baseCur)
+        private async Task<bool> IsExchangeSetUniqueAsync(CurrencyType cur, CurrencyType baseCur, CancellationToken cancellationToken)
         {
-            var evidence = await _dbContext.FavoriteExchanges.Where(x=>x.BaseCurrencyType == baseCur).Where(x=>x.SelectedCurrencyType == cur).FirstOrDefaultAsync();
+            var evidence = await _dbContext.FavoriteExchanges.Where(x => x.BaseCurrencyType == baseCur && x.SelectedCurrencyType == cur)
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (evidence is null)
             {
                 return true;

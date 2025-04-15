@@ -23,7 +23,7 @@ namespace Fuse8.BackendInternship.PublicApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Fuse8.BackendInternship.PublicApi.Models.FavoriteRateDBObject", b =>
+            modelBuilder.Entity("Fuse8.BackendInternship.PublicApi.Models.FavoriteRateDB", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

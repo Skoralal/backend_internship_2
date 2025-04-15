@@ -42,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Protobuf Include="..\Common\Grpc\service.proto">
+      <Protobuf Include="..\service.proto">
         <Link>gRPC\service.proto</Link>
       </Protobuf>
     </ItemGroup>

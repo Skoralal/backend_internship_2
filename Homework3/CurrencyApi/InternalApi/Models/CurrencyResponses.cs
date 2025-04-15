@@ -28,14 +28,14 @@ namespace InternalApi.Models
     /// <summary>
     /// Model of exchange rates between two currencies w/ date
     /// </summary>
-    public record CurrencyLoadWDate:CurrencyLoadBase
+    public record CurrencyLoadWDate : CurrencyLoadBase
     {
         /// <summary>
-        /// Date of exchange rate [format(YYYY-MM-DD)]
+        /// Date the rate was last actual
         /// </summary>
         [JsonPropertyName("date")]
         public DateOnly Date { get; set; }
-        public CurrencyLoadWDate(ApiResponse response, int precision, DateOnly date) :base(response, precision)
+        public CurrencyLoadWDate(ApiResponse response, int precision, DateOnly date) : base(response, precision)
         {
             Date = date;
         }

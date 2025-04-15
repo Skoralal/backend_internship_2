@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fuse8.BackendInternship.PublicApi.Migrations
 {
     [DbContext(typeof(UsersDBContext))]
-    [Migration("20250408132323_AddedFavorites")]
-    partial class AddedFavorites
+    [Migration("20250413151855_v1.0")]
+    partial class v10
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,7 +26,7 @@ namespace Fuse8.BackendInternship.PublicApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Fuse8.BackendInternship.PublicApi.Models.FavoriteRateDBObject", b =>
+            modelBuilder.Entity("Fuse8.BackendInternship.PublicApi.Models.FavoriteRateDB", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

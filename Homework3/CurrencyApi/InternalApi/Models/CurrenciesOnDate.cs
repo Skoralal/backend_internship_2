@@ -3,8 +3,6 @@
     /// <summary>
     /// Курсы валют на конкретную дату
     /// </summary>
-    /// <param name="LastUpdatedAt">Дата обновления данных</param>
-    /// <param name="Currencies">Список курсов валют</param>
     public record CurrenciesOnDate
     {
         public DateTime LastUpdatedAt { get; set; }
@@ -20,7 +18,7 @@
         public CurrenciesOnDate(ApiResponse apiResponse)
         {
             LastUpdatedAt = DateTime.Parse(apiResponse.Meta.LastUpdatedAt).ToUniversalTime();
-            Currencies = apiResponse.Data.Values.Select(currencyEntry=>new Currency(currencyEntry.Code,currencyEntry.Value)).ToArray();
+            Currencies = apiResponse.Data.Values.Select(currencyEntry => new Currency(currencyEntry.Code, currencyEntry.Value)).ToArray();
         }
     }
 }

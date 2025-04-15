@@ -1,4 +1,4 @@
-﻿using Common.Models;
+﻿using Common.Models.Exceptions;
 using Fuse8.BackendInternship.PublicApi.Models;
 using Fuse8.BackendInternship.PublicApi.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fuse8.BackendInternship.PublicApi.Controllers
 {
     [Route("favorite/")]
-    public class FavoriteExchangeController:ControllerBase
+    public class FavoriteExchangeController : ControllerBase
     {
         private readonly FavoriteExchangesService _favoriteExchangeService;
         public FavoriteExchangeController(FavoriteExchangesService favoriteExchangeService)
@@ -16,9 +16,8 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <summary>
         /// Add new favorite exchange rate
         /// </summary>
-        /// <param name="name">name of the rate</param>
-        /// <param name="currency">selected currency</param>
-        /// <param name="baseCurrency">base currency</param>
+        /// <param name="model">model to be sent</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -28,23 +27,27 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpPost("{name}")]
+        [HttpPost()]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult> AddFavoriteAsync([FromRoute]string name, [FromHeader] CurrencyType currency, [FromHeader] CurrencyType baseCurrency)
+        public async Task<ActionResult> AddFavoriteAsync([FromBody] FavoriteRateRequestModel model, CancellationToken cancellationToken)
         {
+            if (!Enum.IsDefined(model.Currency) || !Enum.IsDefined(model.BaseCurrency))
+            {
+                throw new CurrencyNotFoundException();
+            }
             await _favoriteExchangeService.AddFavoriteAsync(new()
             {
-                BaseCurrencyType = baseCurrency,
-                SelectedCurrencyType = currency,
-                Id = new Guid(),
-                Name = name
-            });
+                BaseCurrencyType = model.BaseCurrency,
+                SelectedCurrencyType = model.Currency,
+                Name = model.Name
+            }, cancellationToken: cancellationToken);
             return Ok();
         }
         /// <summary>
         /// get an exchange rate with the specified name
         /// </summary>
         /// <param name="name">name of the rate</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -56,9 +59,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet("{name}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<FavoriteRateDBObject>> GetFavoriteByNameAsync([FromRoute] string name)
+        public async Task<ActionResult<FavoriteRateDB>> GetFavoriteByNameAsync([FromRoute] string name, CancellationToken cancellationToken)
         {
-            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(name);
+            var rate = await _favoriteExchangeService.GetFavoriteByNameAsync(name, cancellationToken: cancellationToken);
             return Ok(rate);
         }
         /// <summary>
@@ -75,18 +78,17 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpGet()]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<FavoriteRateDBObject[]>> GetAllFavoriteAsync()
+        public async Task<ActionResult<FavoriteRateDB[]>> GetAllFavoriteAsync(CancellationToken cancellationToken)
         {
-            var rates = await _favoriteExchangeService.GetAllFavoriteAsync();
+            var rates = await _favoriteExchangeService.GetAllFavoriteAsync(cancellationToken: cancellationToken);
             return Ok(rates);
         }
         /// <summary>
         /// change specified by name rate's parameters to supplied 
         /// </summary>
         /// <param name="name">name of the rate</param>
-        /// <param name="newName">new name of the rate(optional)</param>
-        /// <param name="currency">selected currency (default to not change)</param>
-        /// <param name="baseCurrency">base currency (default to not change)</param>
+        /// <param name="model">model to be sent</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -98,28 +100,25 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpPut("{name}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult> ReplaceFavoriteByNameAsync([FromRoute] string name, [FromHeader] CurrencyType? currency,
-            [FromHeader] CurrencyType? baseCurrency, [FromHeader] string newName = "")
+        public async Task<ActionResult> ReplaceFavoriteByNameAsync([FromRoute] string name, [FromBody] FavoriteRateRequestModel model,
+            CancellationToken cancellationToken)
         {
-            if(newName == "")
+            if (!Enum.IsDefined(model.Currency) || !Enum.IsDefined(model.BaseCurrency))
             {
-                newName = name;
+                throw new CurrencyNotFoundException();
             }
-            if(baseCurrency == CurrencyType.NotSet)
+            if (string.IsNullOrEmpty(model.Name))
             {
-                baseCurrency = null;
+                model.Name = name;
             }
-            if(currency == CurrencyType.NotSet)
-            {
-                currency = null;
-            }
-            await _favoriteExchangeService.ReplaceFavoriteByNameAsync(name, newName, currency, baseCurrency);
+            await _favoriteExchangeService.ReplaceFavoriteByNameAsync(name, model, cancellationToken: cancellationToken);
             return Ok();
         }
         /// <summary>
         /// delete an exchange rate with the specified name
         /// </summary>
         /// <param name="name">name of the rate</param>
+        /// <param name="cancellationToken"></param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -131,9 +130,9 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
         /// </response>
         [HttpDelete("{name}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult> DeleteFavoriteByNameAsync([FromRoute] string name)
+        public async Task<ActionResult> DeleteFavoriteByNameAsync([FromRoute] string name, CancellationToken cancellationToken)
         {
-            await _favoriteExchangeService.DeleteFavoriteByNameAsync(name);
+            await _favoriteExchangeService.DeleteFavoriteByNameAsync(name, cancellationToken: cancellationToken);
             return Ok();
         }
     }

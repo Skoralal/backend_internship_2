@@ -9,17 +9,17 @@ namespace InternalApi.Services
 {
     public class gRPCServer : gRPCCurrency.gRPCCurrencyBase
     {
-        private readonly ExternalCallerService _callerService;
-        private readonly IOptionsMonitor<AppOptions> _settings;
-        public gRPCServer(ExternalCallerService callerService, IOptionsMonitor<AppOptions> settings)
+        private readonly CurrencyRequestHandlerService _callerService;
+        private readonly HttpCallerService _httpService;
+        public gRPCServer(CurrencyRequestHandlerService callerService, HttpCallerService httpService, IOptionsMonitor<AppOptions> settings)
         {
             _callerService = callerService;
-            _settings = settings;
+            _httpService = httpService;
         }
         public override async Task<CurrencyDTOResponse> GetCurrencyOnDate(CurrencyOnDateRequest request, ServerCallContext context)
         {
-            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrencyOnDateAsync((CurrencyType)request.CurrencyType,
-                (CurrencyType)request.BaseCurrencyType,  DateOnly.FromDateTime(new DateTime(request.Date, DateTimeKind.Utc)), context.CancellationToken);
+            CurrencyDTO currencyDTO = await _callerService.GetCurrencyOnDateAsync((CurrencyType)request.CurrencyType,
+                (CurrencyType)request.BaseCurrencyType, request.Date.ToDateTime(), context.CancellationToken);
             CurrencyDTOResponse response = new CurrencyDTOResponse()
             {
                 CurrencyType = request.CurrencyType,
@@ -30,7 +30,7 @@ namespace InternalApi.Services
 
         public override async Task<CurrencyDTOResponse> GetCurrentCurrency(CurrentCurrencyRequest request, ServerCallContext context)
         {
-            Models.CurrencyDTO currencyDTO = await _callerService.GetCurrentCurrencyAsync((CurrencyType)request.CurrencyType, (CurrencyType)request.BaseCurrencyType, context.CancellationToken);
+            CurrencyDTO currencyDTO = await _callerService.GetCurrentCurrencyAsync((CurrencyType)request.CurrencyType, (CurrencyType)request.BaseCurrencyType, context.CancellationToken);
             CurrencyDTOResponse response = new CurrencyDTOResponse()
             {
                 CurrencyType = request.CurrencyType,
@@ -42,7 +42,7 @@ namespace InternalApi.Services
         {
             var status = new gRPC.GrpcStatusResponse()
             {
-                HasRequests = await _callerService.HasTokens(),
+                HasRequests = await _httpService.HasTokens(context.CancellationToken),
             };
             return status;
         }
