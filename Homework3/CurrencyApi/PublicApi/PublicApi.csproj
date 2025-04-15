@@ -13,6 +13,7 @@
         <PackageReference Include="Audit.HttpClient" Version="27.5.0" />
         <PackageReference Include="Audit.NET" Version="27.5.0" />
         <PackageReference Include="Audit.NET.Serilog" Version="27.5.0" />
+        <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.70.0" />
         <PackageReference Include="Grpc.Tools" Version="2.71.0">
           <PrivateAssets>all</PrivateAssets>
@@ -20,6 +21,11 @@
         </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="Serilog" Version="4.2.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
@@ -36,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Protobuf Include="..\Common\Grpc\service.proto">
+      <Protobuf Include="..\service.proto">
         <Link>gRPC\service.proto</Link>
       </Protobuf>
     </ItemGroup>

@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-
-namespace InternalApi.Services
+﻿namespace InternalApi.Services
 {
-    public class IncomingRequestsLogger:IMiddleware
+    public class IncomingRequestsLogger : IMiddleware
     {
         private readonly ILogger<IncomingRequestsLogger> _logger;
         public IncomingRequestsLogger(ILogger<IncomingRequestsLogger> logger)
@@ -16,8 +13,8 @@ namespace InternalApi.Services
             _logger.LogInformation("Incoming request{Method} {URL}", request.Method, request.Path);
             await next(context);
             var responce = context.Response;
-            if (responce.StatusCode == 200) 
-            { 
+            if (responce.StatusCode == 200)
+            {
                 _logger.LogInformation("Request {Method} {URL} comleted with code {StatusCode}", request.Method, request.Path, responce.StatusCode);
             }
             else

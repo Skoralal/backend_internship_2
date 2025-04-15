@@ -3,27 +3,29 @@
 namespace InternalApi.Models
 {
     // StatusResponce myDeserializedClass = JsonConvert.DeserializeObject<StatusResponce>(myJsonResponse);
-
+    /// <summary>
+    /// monthly quota
+    /// </summary>
     public class Month
     {
-        [JsonPropertyName("total")]
-        public int Total { get; set; }
-        [JsonPropertyName("used")]
-        public int Used { get; set; }
         [JsonPropertyName("remaining")]
-        public int Remaining { get; set; }
+        public required int Remaining { get; set; }
     }
-
+    /// <summary>
+    /// different quotas
+    /// </summary>
     public class Quotas
     {
         [JsonPropertyName("month")]
-        public Month Month { get; set; }
+        public required Month Month { get; set; }
     }
-
+    /// <summary>
+    /// how API sends status information
+    /// </summary>
     public class ApiStatusResponse
     {
         [JsonPropertyName("quotas")]
-        public Quotas Quotas { get; set; }
+        public required Quotas Quotas { get; set; }
     }
 
 

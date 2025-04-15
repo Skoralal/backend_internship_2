@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net;
+﻿using Common.Models.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using InternalApi.Models.Exceptions;
 
 namespace InternalApi.Models.Exceptions
 {
-    public class GlobalExceptionFilter: IExceptionFilter
+    public class GlobalExceptionFilter : IExceptionFilter
     {
         private readonly ILogger<GlobalExceptionFilter> _logger;
         public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
@@ -34,7 +33,7 @@ namespace InternalApi.Models.Exceptions
             void SetResponse(string errorMessage, int statusCode)
             {
                 context.Result = new JsonResult(new ErrorResponse(errorMessage));
-                context.HttpContext.Response.StatusCode = statusCode;   
+                context.HttpContext.Response.StatusCode = statusCode;
             }
         }
     }

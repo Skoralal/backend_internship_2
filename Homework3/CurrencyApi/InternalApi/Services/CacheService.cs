@@ -1,44 +1,71 @@
-﻿using System.Text.Json;
-using Common.Models;
+﻿using Common.Models;
 using InternalApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace InternalApi.Services
 {
+    /// <summary>
+    /// service to operate exchange rate cache
+    /// </summary>
     public class CacheService
     {
-        private static readonly object _lock = new();
-        private readonly string _cacheFolder;
-        public CacheService()
+        private readonly CacheDBContext _dbContext;
+        public CacheService(CacheDBContext dBContext)
         {
-            _cacheFolder = Path.Combine(Directory.GetCurrentDirectory(), "cache");
+            _dbContext = dBContext;
         }
-        public void WriteToCache(Currency[] data, DateTime time)
+        /// <summary>
+        /// writes data to cache
+        /// </summary>
+        /// <param name="data">rates themselves</param>
+        /// <param name="time">time to write as 'actuality timestamp'</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task WriteToCacheAsync(Currency[] data, DateTime time, CancellationToken cancellationToken)
         {
-            string jsonString = JsonSerializer.Serialize(data);
-            lock (_lock)
-            {
-                File.WriteAllText(_cacheFolder + "/" + time.Ticks + ".json", jsonString);
-            }
-
+            CurrencyDB[] dbObjects = data.Select(cur => new CurrencyDB(cur, time)).ToArray();
+            _dbContext.ExchangeRates.AddRange(dbObjects);
+            await _dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            return;
         }
-        public bool GetFromCache(long ticksDateTime, CurrencyType currencyCode, long ticksSatisfactoryDelay, out CurrencyDTO currency)
+        /// <summary>
+        /// get rate of epecified currency on specified time from cache
+        /// </summary>
+        /// <param name="ticksDateTime">desired time</param>
+        /// <param name="currencyCode">desired currency</param>
+        /// <param name="satisfactoryDelay">maximum time passed up to desired time</param>
+        /// <param name="baseCurrencyCode">base currency</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>null if not found, rate if found</returns>
+        public async Task<CurrencyDTO?> GetFromCacheAsync(DateTime ticksDateTime, CurrencyType currencyCode, TimeSpan satisfactoryDelay,
+            CurrencyType baseCurrencyCode, CancellationToken cancellationToken)
         {
-            currency = null;
-            long borderEligible = ticksDateTime - ticksSatisfactoryDelay;
-            long fileName = Directory.GetFiles(_cacheFolder)
-                                          .Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
-                                          .Where(x=>x<=ticksDateTime).Where(x=>x>borderEligible)
-                                          .OrderByDescending(x=>x)
-                                          .FirstOrDefault(-1);
-            if(fileName == -1)
+            DateTime borderEligible = ticksDateTime - satisfactoryDelay;
+            var rates = _dbContext.ExchangeRates
+                .Where(entry => entry.ActualityTime <= ticksDateTime.ToUniversalTime() && entry.ActualityTime > borderEligible.ToUniversalTime())
+                .OrderByDescending(entry => entry.ActualityTime)
+                .AsNoTracking();
+            CurrencyDB[] pairRates = await rates.Where(rate => rate.Code == baseCurrencyCode || rate.Code == currencyCode)
+                .ToArrayAsync(cancellationToken: cancellationToken);
+            if (currencyCode == baseCurrencyCode)
             {
-                return false;
+                return new CurrencyDTO()
+                {
+                    CurrencyType = currencyCode,
+                    Value = 1
+                };
             }
-            string json = File.ReadAllText(_cacheFolder + "/" + fileName + ".json");
-            Currency[] exchenges = JsonSerializer.Deserialize<Currency[]>(json);
-            string currencyCodeString = currencyCode.ToString();
-            currency = new(exchenges.First(x => x.Code == currencyCodeString));
-            return true;
+            else if (pairRates.Length < 2)
+            {
+                return null;
+            }
+            CurrencyDTO currency = new()
+            {
+                CurrencyType = currencyCode,
+                Value = pairRates.Where(rate => rate.Code == currencyCode).First().ExchangeRate
+                / pairRates.Where(rate => rate.Code == baseCurrencyCode).First().ExchangeRate
+            };
+            return currency;
         }
     }
 }

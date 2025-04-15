@@ -5,12 +5,13 @@ namespace InternalApi.Models
     /// <summary>
     /// Курс валюты
     /// </summary>
-    /// <param name="Code">Код валюты</param>
-    /// <param name="Value">Значение курса валют, относительно базовой валюты</param>
     public record Currency
     {
+        /// <summary>
+        /// code of the currency
+        /// </summary>
         [JsonPropertyName("code")]
-        public string Code {  get; set; }
+        public string Code { get; set; }
         /// <summary>
         /// exchange rate
         /// </summary>

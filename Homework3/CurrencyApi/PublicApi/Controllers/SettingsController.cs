@@ -1,14 +1,13 @@
 ﻿using Fuse8.BackendInternship.PublicApi.Models;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 using Fuse8.BackendInternship.PublicApi.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Fuse8.BackendInternship.PublicApi.Controllers
 {
 
     [Route("settings/")]
-    public class SettingsController:ControllerBase
+    public class SettingsController : ControllerBase
     {
 
         private readonly DefaultSettings _settings;
@@ -35,9 +34,6 @@ namespace Fuse8.BackendInternship.PublicApi.Controllers
             var internalSettings = await _grpcClient.GetStatus(cancellation);
             MyStatus body = new MyStatus()
             {
-                BaseCurrency = internalSettings.BaseCurrency.ToString().ToUpper(),
-                DefaultCurrency = _settings.DefaultCurrency,
-                RoundingPrecision = _settings.CurrencyRoundCount,
                 HasTokens = internalSettings.HasRequests
             };
 

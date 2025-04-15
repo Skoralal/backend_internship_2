@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net;
+﻿using Common.Models.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
 {
-    public class GlobalExceptionFilter: IExceptionFilter
+    public class GlobalExceptionFilter : IExceptionFilter
     {
         private readonly ILogger<GlobalExceptionFilter> _logger;
         public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
@@ -22,6 +22,10 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
                 case CurrencyNotFoundException NotFoundException:
                     SetResponse(NotFoundException.Message, StatusCodes.Status404NotFound);
                     break;
+                case CrudOperationException crudException:
+                    _logger.LogError(crudException.Message);
+                    SetResponse(crudException.Message, StatusCodes.Status400BadRequest);
+                    break;
                 default:
                     _logger.LogWarning(context.Exception, "Unknown Exception was thrown");
                     SetResponse("Unknown Exception was thrown", StatusCodes.Status500InternalServerError);
@@ -33,7 +37,7 @@ namespace Fuse8.BackendInternship.PublicApi.Models.Exceptions
             void SetResponse(string errorMessage, int statusCode)
             {
                 context.Result = new JsonResult(new ErrorResponse(errorMessage));
-                context.HttpContext.Response.StatusCode = statusCode;   
+                context.HttpContext.Response.StatusCode = statusCode;
             }
         }
     }

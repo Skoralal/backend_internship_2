@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 
 namespace Fuse8.BackendInternship.PublicApi.Models.ModelBinders
 {
-    public class DateOnlyJsonConverter:JsonConverter<DateOnly>
+    public class DateOnlyJsonConverter : JsonConverter<DateOnly>
     {
         public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var value = reader.GetString();
-            if(string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(value))
             {
                 throw new SerializationException($"Can not convert string to {nameof(DateOnly)}: value is empty");
             }

@@ -1,8 +1,5 @@
-﻿using System.Text.Json;
-using System.Threading;
-using Common.Models;
+﻿using Common.Models;
 using InternalApi.Models;
-using InternalApi.Models.Exceptions;
 using InternalApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,11 +11,11 @@ namespace InternalApi.Controllers
     /// </summary>
     [ApiController]
     [Route("currency/")]
-    public class CurrencyReceiverController:ControllerBase
+    public class CurrencyReceiverController : ControllerBase
     {
-        private readonly ExternalCallerService _caller;
+        private readonly CurrencyRequestHandlerService _caller;
         private readonly AppOptions _settings;
-        public CurrencyReceiverController(ExternalCallerService caller, IOptionsMonitor<AppOptions> settings)
+        public CurrencyReceiverController(CurrencyRequestHandlerService caller, IOptionsMonitor<AppOptions> settings)
         {
             _caller = caller;
             _settings = settings.CurrentValue;
@@ -38,19 +35,14 @@ namespace InternalApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpGet()]
+        [HttpGet("{currencyCode}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBaseAsync(CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBaseAsync([FromRoute] CurrencyType currencyCode, CancellationToken cancellationToken)
         {
-            CurrencyType currencyType = default;
-            if (!Enum.TryParse(_settings.DefaultCurrency.ToUpper(), out currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyCode, CurrencyType.USD, cancellationToken);
             return Ok(currency);
         }
 
@@ -59,6 +51,8 @@ namespace InternalApi.Controllers
         /// Get exchange rate of specified currency towards base one
         /// </summary>
         /// <param name="currencyCode">specified currency code</param>
+        /// <param name="baseCurrencyCode">specified base currency code</param>
+        /// <param name="cancellationToken">cancellation token</param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -71,18 +65,15 @@ namespace InternalApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpGet("{currencyCode}")]
+        [HttpGet("{currencyCode}/{baseCurrencyCode}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute]string currencyCode, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute] CurrencyType currencyCode,
+            [FromRoute] CurrencyType baseCurrencyCode, CancellationToken cancellationToken)
         {
-            if(!Enum.TryParse(currencyCode.ToUpper(), out CurrencyType currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrentCurrencyAsync(currencyType, cancellationToken);
+            var currency = await _caller.GetCurrentCurrencyAsync(currencyCode, baseCurrencyCode, cancellationToken);
             return Ok(currency);
         }
 
@@ -92,6 +83,8 @@ namespace InternalApi.Controllers
         /// </summary>
         /// <param name="currencyCode">specified currency code</param>
         /// <param name="date">specified time [format(YYYY-MM-DD)]</param>
+        /// <param name="baseCurrencyCode">specified base currency code</param>
+        /// <param name="cancellationToken">cancellation token</param>
         /// <response code="200">
         /// if successful
         /// </response>
@@ -104,23 +97,19 @@ namespace InternalApi.Controllers
         /// <response code="500">
         /// if unexpected error occurred
         /// </response>
-        [HttpGet("{currencyCode}/{date}")]
+        [HttpGet("{currencyCode}/{baseCurrencyCode}/{date}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CurrencyDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ErrorResponse))]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests, Type = typeof(ErrorResponse))]
-        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute] string currencyCode,[FromRoute] DateOnly date, CancellationToken cancellationToken)
+        public async Task<ActionResult<CurrencyDTO>> GetBase([FromRoute] CurrencyType currencyCode, [FromRoute] CurrencyType baseCurrencyCode,
+            [FromRoute] DateOnly date, CancellationToken cancellationToken)
         {
-            CurrencyType currencyType = default;
-            if (!Enum.TryParse(currencyCode.ToUpper(), out currencyType))
-            {
-                throw new CurrencyNotFoundException();
-            };
-            var currency = await _caller.GetCurrencyOnDateAsync(currencyType, date, cancellationToken);
+            var currency = await _caller.GetCurrencyOnDateAsync(currencyCode, baseCurrencyCode, date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc), cancellationToken);
             return Ok(currency);
         }
 
 
-        
+
     }
 }

@@ -19,7 +19,7 @@ namespace Fuse8.BackendInternship.PublicApi.SwaggerFilters
         };
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            
+
 
             AddResponseCode(StatusCodes.Status404NotFound, "Returns if a currency is not found");
             AddResponseCode(StatusCodes.Status429TooManyRequests, "Returns if ran out of tokens");

@@ -2,9 +2,13 @@
 {
     public class NetOptions
     {
-        public string ApiKey { get; set; }
-        public string BaseURL { get; set; }
-        public int gRPCPort { get; set; }
-        public int HTTPPort { get; set; }
+        /// <summary>
+        /// Currency API key - covert
+        /// </summary>
+        public required string ApiKey { get; set; }
+        /// <summary>
+        /// base url to call currency API - not covert
+        /// </summary>
+        public required string BaseURL { get; set; }
     }
 }
