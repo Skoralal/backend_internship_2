@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionF
 		DockerInternalApi.dockerfile = DockerInternalApi.dockerfile
 		DockerPublicApi.dockerfile = DockerPublicApi.dockerfile
 		..\ReadMe.md = ..\ReadMe.md
-		InternalApiImage.html = InternalApiImage.html
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InternalApi", "InternalApi\InternalApi.csproj", "{A5F0F1EA-7004-438D-A134-A9E5ABCDB5D7}"
