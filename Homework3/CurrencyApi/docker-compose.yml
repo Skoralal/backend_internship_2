@@ -2,14 +2,61 @@ version: '3.8'
 
 services:
   postgres:
+    container_name: currency_postrgres
     image: postgres:17.4
-    restart: unless-stopped
+    restart: ${RESTART_POLICY}
     environment:
       DATABASE_HOST: 127.0.0.1
-      POSTGRES_USER: someUser
-      POSTGRES_PASSWORD: P@ssw0rd
-      POSTGRES_DB: fuse8Internship
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-       - /DockerData/postgres/data:/var/lib/postgresql/data
+      - /DockerData/postgres/data:/var/lib/postgresql/data
+  internalapi:
+    build:
+      context: .
+      dockerfile: DockerInternalApi.dockerfile
+    container_name: currency_internalapi
+    image: internalapi:latest
+    restart: ${RESTART_POLICY}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - Kestrel__Endpoints__Http__Url=http://*:${KESTREL_HTTP_PORT}
+      - Kestrel__Endpoints__Grpc__Url=http://*:${KESTREL_GRPC_PORT}
+      - ConnectionStrings__CurrencyApi=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${CURRENCY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "5178:${KESTREL_HTTP_PORT}"
+    expose:
+      - "${KESTREL_GRPC_PORT}"
+    healthcheck:
+      test: curl --fail http://localhost:${KESTREL_HTTP_PORT}/health || exit 1
+      interval: 1s
+      retries: 2
+      start_period: 2s
+      timeout: 5s
+  publicapi:
+    build:
+      context: .
+      dockerfile: DockerPublicApi.dockerfile
+    container_name: currency_publicapi
+    image: publicapi:latest
+    restart: ${RESTART_POLICY}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - GrpcURL=http://internalapi:${KESTREL_GRPC_PORT}
+      - ConnectionStrings__CurrencyApi=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${CURRENCY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "5166:${PUBLIC_API_HTTP_PORT}"
+    expose:
+      - "5166"
+    healthcheck:
+      test: curl --fail http://localhost:${PUBLIC_API_HTTP_PORT}/health || exit 1
+      interval: 1s
+      retries: 2
+      start_period: 2s
+      timeout: 5s
+    depends_on:
+      internalapi:
+        condition: service_healthy

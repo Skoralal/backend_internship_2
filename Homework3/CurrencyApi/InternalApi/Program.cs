@@ -47,6 +47,7 @@ builder.Services.Configure<NetOptions>(_configuration.GetSection("NetOptions"));
 builder.Services.AddOpenApi();
 builder.Services.AddGrpc();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHealthChecks();
 //Services with configuration
 builder.Services.AddDbContext<CacheDBContext>(
     options =>
@@ -141,6 +142,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 app.UseMiddleware<IncomingRequestsLogger>();
+app.MapHealthChecks("/health");
 
 
 
