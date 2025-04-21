@@ -1,4 +1,4 @@
-**/.classpath
+﻿**/.classpath
 **/.dockerignore
 **/.env
 **/.git
@@ -19,6 +19,7 @@
 **/node_modules
 **/npm-debug.log
 **/obj
+**/DockerData
 **/secrets.dev.yaml
 **/values.dev.yaml
 LICENSE

@@ -1,8 +1,6 @@
-version: '3.8'
-
-services:
+﻿services:
   postgres:
-    container_name: currency_postrgres
+    container_name: ${POSTGRES_CONTAINER_NAME}
     image: postgres:17.4
     restart: ${RESTART_POLICY}
     environment:
@@ -13,13 +11,14 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - /DockerData/postgres/data:/var/lib/postgresql/data
+      - ../DockerData/postgres/data:/var/lib/postgresql/data
+
   internalapi:
-    build:
-      context: .
-      dockerfile: DockerInternalApi.dockerfile
-    container_name: currency_internalapi
+    container_name: ${INTERNAL_API_CONTAINER_NAME}
     image: internalapi:latest
+    build:
+      context: ..
+      dockerfile: InternalApi/Dockerfile
     restart: ${RESTART_POLICY}
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
@@ -32,28 +31,28 @@ services:
       - "${KESTREL_GRPC_PORT}"
     healthcheck:
       test: curl --fail http://localhost:${KESTREL_HTTP_PORT}/health || exit 1
-      interval: 1s
+      interval: 10s
       retries: 2
       start_period: 2s
       timeout: 5s
+
   publicapi:
-    build:
-      context: .
-      dockerfile: DockerPublicApi.dockerfile
-    container_name: currency_publicapi
+    container_name: ${PUBLIC_API_CONTAINER_NAME}
     image: publicapi:latest
+    build:
+      context: ..
+      dockerfile: PublicApi/Dockerfile
     restart: ${RESTART_POLICY}
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - GrpcURL=http://internalapi:${KESTREL_GRPC_PORT}
+      - ASPNETCORE_URLS=http://*:${PUBLIC_API_HTTP_PORT}
+      - GrpcURL=http://${INTERNAL_API_CONTAINER_NAME}:${KESTREL_GRPC_PORT}
       - ConnectionStrings__CurrencyApi=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${CURRENCY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     ports:
       - "5166:${PUBLIC_API_HTTP_PORT}"
-    expose:
-      - "5166"
     healthcheck:
       test: curl --fail http://localhost:${PUBLIC_API_HTTP_PORT}/health || exit 1
-      interval: 1s
+      interval: 10s
       retries: 2
       start_period: 2s
       timeout: 5s
