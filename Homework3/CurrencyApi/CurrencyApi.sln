@@ -8,12 +8,23 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{7F1CAA5F-961F-49C8-B0EF-2E18E10D1BAA}"
 	ProjectSection(SolutionItems) = preProject
 		..\ReadMe.md = ..\ReadMe.md
-		service.proto = service.proto
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InternalApi", "InternalApi\InternalApi.csproj", "{A5F0F1EA-7004-438D-A134-A9E5ABCDB5D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{D6851244-739A-4ABB-9F64-7CA81D4B1C41}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
+	ProjectSection(SolutionItems) = preProject
+		Docker\DockerPublicApi.dockerfile = Docker\DockerPublicApi.dockerfile
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{EF04A656-23EF-46F8-9E57-73524BBD4F0E}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		Docker\.env = Docker\.env
+		Docker\docker-compose.yml = Docker\docker-compose.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +47,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EF04A656-23EF-46F8-9E57-73524BBD4F0E} = {7F1CAA5F-961F-49C8-B0EF-2E18E10D1BAA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8478FA19-35AD-4A20-9503-87515BB9C669}

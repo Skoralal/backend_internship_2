@@ -109,6 +109,7 @@ public class Startup
         }
 
         services.AddScoped<GrpcCurrencyService>();
+        services.AddHealthChecks();
 
         services.AddGrpcClient<gRPCCurrency.gRPCCurrencyClient>(grpc =>
         {
@@ -147,6 +148,7 @@ public class Startup
         }
 
         app.UseMiddleware<IncomingRequestsLogger>();
+        app.UseHealthChecks("/health");
 
         app.UseRouting()
             .UseEndpoints(endpoints => endpoints.MapControllers());

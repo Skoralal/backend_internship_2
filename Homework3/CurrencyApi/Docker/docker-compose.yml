@@ -1,0 +1,61 @@
+﻿services:
+  postgres:
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    image: postgres:17.4
+    restart: ${RESTART_POLICY}
+    environment:
+      DATABASE_HOST: 127.0.0.1
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - ../DockerData/postgres/data:/var/lib/postgresql/data
+
+  internalapi:
+    container_name: ${INTERNAL_API_CONTAINER_NAME}
+    image: internalapi:latest
+    build:
+      context: ..
+      dockerfile: InternalApi/Dockerfile
+    restart: ${RESTART_POLICY}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - Kestrel__Endpoints__Http__Url=http://*:${KESTREL_HTTP_PORT}
+      - Kestrel__Endpoints__Grpc__Url=http://*:${KESTREL_GRPC_PORT}
+      - ConnectionStrings__CurrencyApi=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${CURRENCY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "5178:${KESTREL_HTTP_PORT}"
+    expose:
+      - "${KESTREL_GRPC_PORT}"
+    healthcheck:
+      test: curl --fail http://localhost:${KESTREL_HTTP_PORT}/health || exit 1
+      interval: 10s
+      retries: 2
+      start_period: 2s
+      timeout: 5s
+
+  publicapi:
+    container_name: ${PUBLIC_API_CONTAINER_NAME}
+    image: publicapi:latest
+    build:
+      context: ..
+      dockerfile: PublicApi/Dockerfile
+    restart: ${RESTART_POLICY}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://*:${PUBLIC_API_HTTP_PORT}
+      - GrpcURL=http://${INTERNAL_API_CONTAINER_NAME}:${KESTREL_GRPC_PORT}
+      - ConnectionStrings__CurrencyApi=Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${CURRENCY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "5166:${PUBLIC_API_HTTP_PORT}"
+    healthcheck:
+      test: curl --fail http://localhost:${PUBLIC_API_HTTP_PORT}/health || exit 1
+      interval: 10s
+      retries: 2
+      start_period: 2s
+      timeout: 5s
+    depends_on:
+      internalapi:
+        condition: service_healthy
